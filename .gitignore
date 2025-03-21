@@ -1,0 +1,45 @@
+# Node modules (backend & frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Logs
+logs/
+*.log
+*.log.*
+debug.log
+logs.txt
+
+# Environment variables (Sensitive data)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+config.env
+
+# Build files
+dist/
+build/
+.DS_Store
+
+# Cache
+.cache/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS/Editor-specific
+Thumbs.db
+.DS_Store
+*.bak
+*.swp
+*.swo
+
+# Dependency Lock Files (optional)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

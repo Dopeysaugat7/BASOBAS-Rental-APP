@@ -1,0 +1,274 @@
+import ErrorHandler from "../middlewares/error.js";
+import { catchAsyncError } from "../middlewares/catchAsyncError.js";
+import { User } from "../models/userModel.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import twilio from "twilio";
+import { sendToken } from "../utils/sendToken.js";
+
+let client;
+
+export const register = catchAsyncError(async (req, res, next) => {
+  try {
+    const { name, email, password, phone, verificationMethod } = req.body;
+    if (!name || !email || !password || !phone || !verificationMethod) {
+      return next(new ErrorHandler("All fields are required", 400));
+    }
+    function validatePhoneNumber(phone) {
+      const phoneRegex = /^(?:\+977[-\s]?)?(9[78]\d{8})$/;
+      return phoneRegex.test(phone);
+    }
+
+    if (!validatePhoneNumber(phone)) {
+      return next(new ErrorHandler("Invalid phone number", 400));
+    }
+
+    const existingUser = await User.findOne({
+      $or: [
+        { email, accountVerified: true },
+        { phone, accountVerified: true },
+      ],
+    });
+
+    if (existingUser) {
+      return next(
+        new ErrorHandler(
+          "User already exists with this email or phone number",
+          400
+        )
+      );
+    }
+
+    const registerationAttemptsByUser = await User.find({
+      $or: [
+        { email, accountVerified: false },
+        { phone, accountVerified: false },
+      ],
+    });
+
+    if (registerationAttemptsByUser.length > 3) {
+      return next(
+        new ErrorHandler(
+          "Too many registration attempts (3), try again after an hour",
+          400
+        )
+      );
+    }
+
+    const userData = {
+      name,
+      email,
+      password,
+      phone,
+    };
+
+    const user = await User.create(userData);
+
+    const verificationCode = await user.generateVerificationCode();
+    await user.save();
+
+    sendverificationCode(
+      verificationMethod,
+      verificationCode,
+      name,
+      email,
+      phone,
+      res
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+async function sendverificationCode(
+  verificationMethod,
+  verificationCode,
+  name,
+  email,
+  phone,
+  res
+) {
+  try {
+    if (verificationMethod.trim().toLowerCase() === "email") {
+      // Send email verification code
+      const message = generateEmailTemplate(verificationCode);
+
+      sendEmail(email, "Your Verification Code", message);
+      res.status(200).json({
+        success: true,
+        message: `Verification email sent to ${name}`,
+      });
+    } else if (verificationMethod.trim().toLowerCase() === "phone") {
+      // Send phone verification code
+      const verificationCodeWithSpaces = verificationCode
+        .toString()
+        .split("")
+        .join(" ");
+
+      // Initializing client
+      try {
+        if (!process.env.TWILIO_SID || !process.env.TWILIO_AUTH_TOKEN) {
+          console.error("Missing Twilio credentials in environment variables");
+        } else {
+          client = twilio(
+            process.env.TWILIO_SID,
+            process.env.TWILIO_AUTH_TOKEN
+          );
+          console.log("Twilio client initialized successfully");
+        }
+      } catch (error) {
+        console.error("Error initializing Twilio client:", error);
+      }
+
+      // In your phone verification condition
+      if (!client) {
+        console.error("Twilio client is not initialized");
+        return res.status(500).json({
+          success: false,
+          message: "SMS service is not available",
+          error: "Twilio client not initialized",
+        });
+      }
+
+      await client.messages.create({
+        body: `Hello! Your code is ${verificationCodeWithSpaces}.`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phone,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `OTP sent to ${phone}`,
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: "Invalid verification method",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Verification code failed to send",
+      error: error.message,
+    });
+  }
+}
+
+function generateEmailTemplate(verificationCode) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+      <h2 style="color: #4CAF50; text-align: center;">Verification Code</h2>
+      <p style="font-size: 16px; color: #333;">Dear User,</p>
+      <p style="font-size: 16px; color: #333;">Your verification code is:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="display: inline-block; font-size: 24px; font-weight: bold; color: #4CAF50; padding: 10px 20px; border: 1px solid #4CAF50; border-radius: 5px; background-color: #e8f5e9;">
+          ${verificationCode}
+        </span>
+      </div>
+      <p style="font-size: 16px; color: #333;">Please use this code to verify your email address. The code will expire in 10 minutes.</p>
+      <p style="font-size: 16px; color: #333;">If you did not request this, please ignore this email.</p>
+      <footer style="margin-top: 20px; text-align: center; font-size: 14px; color: #999;">
+        <p>Thank you,<br>Your Company Team</p>
+        <p style="font-size: 12px; color: #aaa;">This is an automated message. Please do not reply to this email.</p>
+      </footer>
+    </div>
+  `;
+}
+
+export const verifyOTP = catchAsyncError(async (req, res, next) => {
+  const { email, otp, phone } = req.body;
+  function validatePhoneNumber(phone) {
+    const phoneRegex = /^(?:\+977[-\s]?)?(9[78]\d{8})$/;
+    return phoneRegex.test(phone);
+  }
+
+  if (!validatePhoneNumber(phone)) {
+    return next(new ErrorHandler("Invalid phone number", 400));
+  }
+
+  try {
+    const userAllEntries = await User.find({
+      $or: [
+        { email, accountVerified: false },
+        { phone, accountVerified: false },
+      ],
+    }).sort({ createdAt: -1 });
+
+    if (!userAllEntries) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    let user;
+
+    if (userAllEntries.length > 1) {
+      user = userAllEntries[0];
+
+      await User.deleteMany({
+        _id: { $ne: user._id },
+        $or: [
+          { email, accountVerified: false },
+          { phone, accountVerified: false },
+        ],
+      });
+    } else {
+      user = userAllEntries[0];
+    }
+
+    if (user.verificationCode !== Number(otp)) {
+      return next(new ErrorHandler("Invalid OTP", 400));
+    }
+
+    const currentTime = Date.now();
+    const verificationCodeExpire = new Date(
+      user.verificationCodeExpire
+    ).getTime();
+
+    if (currentTime > verificationCodeExpire) {
+      return next(new ErrorHandler("OTP has expired", 400));
+    }
+
+    user.accountVerified = true;
+    user.verificationCode = null;
+    user.verificationCodeExpire = null;
+
+    await user.save({ validateModifiedOnly: true });
+
+    sendToken(user, 200, "Account Verified Successfully", res);
+  } catch (error) {
+    return next(new ErrorHandler("Internal Server Error", 500));
+  }
+});
+
+export const login = catchAsyncError(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new ErrorHandler("Please enter email and password", 400));
+  }
+
+  const user = await User.findOne({ email, accountVerified: true }).select(
+    "+password"
+  );
+
+  if (!user) {
+    return next(new ErrorHandler("Invalid email or password", 400));
+  }
+
+  const isPasswordMatched = await user.comparePassword(password);
+
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Invalid email or password", 400));
+  }
+  sendToken(user, 200, "User Logged in Successfully", res);
+});
+
+export const logout = catchAsyncError(async (req, res, next) => {
+  res
+    .status(200)
+    .cookie("token", null, {
+      httpOnly: true,
+      expires: new Date(Date.now()),
+      secure: true,
+    })
+    .json({ success: true, message: "User Logged out Successfully" });
+});
