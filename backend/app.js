@@ -5,6 +5,7 @@ import cors from "cors";
 import { connectDB } from "./database/dbConnection.js";
 import { errorMiddleware } from "./middlewares/error.js";
 import userRouter from "./routes/userRouter.js";
+import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 
 export const app = express();
 config({ path: "./config.env" });
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/user", userRouter);
 
+removeUnverifiedAccounts();
 connectDB();
 
 app.use(errorMiddleware);

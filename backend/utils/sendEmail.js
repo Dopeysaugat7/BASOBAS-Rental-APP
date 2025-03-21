@@ -1,11 +1,6 @@
 import nodemailer from "nodemailer";
 
 export const sendEmail = async (email, subject, message) => {
-  // Debug logging to check environment variables
-  console.log("SMTP Host:", process.env.SMTP_HOST);
-  console.log("SMTP Mail exists:", !!process.env.SMTP_MAIL);
-  console.log("SMTP Password exists:", !!process.env.SMTP_PASSWORD);
-
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     service: process.env.SMTP_SERVICE,
