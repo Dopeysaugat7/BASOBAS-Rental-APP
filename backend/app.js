@@ -5,6 +5,7 @@ import cors from "cors";
 import { connectDB } from "./database/dbConnection.js";
 import { errorMiddleware } from "./middlewares/error.js";
 import userRouter from "./routes/userRouter.js";
+import superAdminRouter from "./routes/superAdminRouter.js";
 import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 
 export const app = express();
@@ -21,8 +22,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.set("trust proxy", true);
 
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/superadmin", superAdminRouter);
 
 removeUnverifiedAccounts();
 connectDB();
