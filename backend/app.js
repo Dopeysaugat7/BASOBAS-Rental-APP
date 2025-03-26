@@ -27,7 +27,7 @@ app.set("trust proxy", true);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/superadmin", superAdminRouter);
 
-removeUnverifiedAccounts();
+// removeUnverifiedAccounts();
 connectDB();
 
 app.use(errorMiddleware);

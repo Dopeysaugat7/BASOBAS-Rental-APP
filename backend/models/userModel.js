@@ -11,6 +11,14 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
+    trim: true,
+    lowercase: true,
+    validate: {
+      validator: function (v) {
+        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid email address!`,
+    },
   },
   password: {
     type: String,
@@ -21,6 +29,13 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
+  },
+  profilePicture: {
+    type: String,
+    default: "default-image.svg",
+  },
+  dateOfBirth: {
+    type: Date,
   },
   accountVerified: {
     type: Boolean,
@@ -36,9 +51,15 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 userSchema.pre("save", async function (next) {
+  this.updatedAt = Date.now();
+
   if (!this.isModified("password")) {
     next();
   }

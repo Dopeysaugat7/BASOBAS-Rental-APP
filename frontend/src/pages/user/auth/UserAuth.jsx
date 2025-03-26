@@ -7,6 +7,7 @@ import UserSignup from "./UserSignup";
 const UserAuth = () => {
   const { isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+
   if (isAuthenticated) {
     return <Navigate to={"/"} />;
   }

@@ -46,10 +46,10 @@ export const register = catchAsyncError(async (req, res, next) => {
       ],
     });
 
-    if (registerationAttemptsByUser.length > 3) {
+    if (registerationAttemptsByUser.length > 1) {
       return next(
         new ErrorHandler(
-          "Too many registration attempts (3), try again after an hour",
+          "Too many registration attempts (2), try again after an hour",
           400
         )
       );
@@ -64,20 +64,72 @@ export const register = catchAsyncError(async (req, res, next) => {
 
     const user = await User.create(userData);
 
-    const verificationCode = await user.generateVerificationCode();
+    // const verificationCode = await user.generateVerificationCode();
     await user.save();
 
-    sendverificationCode(
-      verificationMethod,
-      verificationCode,
-      name,
-      email,
-      phone,
-      res
-    );
+    // sendverificationCode(
+    //   verificationMethod,
+    //   verificationCode,
+    //   name,
+    //   email,
+    //   phone,
+    //   res
+    // );
+    sendToken(user, 201, "Registration successful", res);
   } catch (error) {
     next(error);
   }
+});
+
+export const sendVerification = catchAsyncError(async (req, res, next) => {
+  const { email, phone, verificationMethod } = req.body;
+
+  if (!email || !phone || !verificationMethod) {
+    return next(new ErrorHandler("All fields are required", 400));
+  }
+
+  const user = await User.findOne({
+    $or: [{ email }, { phone }],
+    accountVerified: false,
+  });
+
+  if (!user) {
+    return next(new ErrorHandler("User not found or already verified", 404));
+  }
+
+  const verificationCode = await user.generateVerificationCode();
+  await user.save();
+
+  await sendverificationCode(
+    verificationMethod,
+    verificationCode,
+    user.name,
+    email,
+    phone,
+    res
+  );
+});
+
+export const resendVerification = catchAsyncError(async (req, res, next) => {
+  const { method } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (user.accountVerified) {
+    return next(new ErrorHandler("Account already verified", 400));
+  }
+
+  const verificationCode = await user.generateVerificationCode();
+  await user.save();
+
+  // Reuse your existing sendVerificationCode function
+  await sendverificationCode(
+    method || user.verificationMethod,
+    verificationCode,
+    user.name,
+    user.email,
+    user.phone,
+    res
+  );
 });
 
 async function sendverificationCode(
@@ -275,9 +327,30 @@ export const logout = catchAsyncError(async (req, res, next) => {
 });
 
 export const getUser = catchAsyncError(async (req, res, next) => {
-  const user = req.user;
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
 
-  res.status(200).json({ success: true, user });
+    // Return user data without sensitive information
+    const userData = {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      phone: req.user.phone,
+      accountVerified: req.user.accountVerified,
+    };
+
+    res.status(200).json({
+      success: true,
+      user: userData,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export const forgotPassword = catchAsyncError(async (req, res, next) => {

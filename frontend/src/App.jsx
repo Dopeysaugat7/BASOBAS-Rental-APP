@@ -18,6 +18,7 @@ import ResetPassword from "./pages/user/auth/ResetPassword";
 import UserAuth from "./pages/user/auth/UserAuth";
 import ThemeToggle from "./components/ThemeToggle";
 import ProtectedRoutes from "./components/ProtectedRoutes";
+import VerificationPrompt from "./pages/user/auth/VerificationPrompt";
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route element={<ProtectedRoutes />}>
+        <Route element={<ProtectedRoutes requireVerification={true} />}>
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="profile" element={<UserProfile />} />
         </Route>
@@ -35,6 +36,10 @@ function App() {
         <Route
           path="otp-verification/:email/:phone"
           element={<OtpVerification />}
+        />
+        <Route
+          path="/verification-prompt/:email/:phone"
+          element={<VerificationPrompt />}
         />
         <Route path="password/forgot" element={<ForgotPassword />} />
         <Route path="password/reset/:token" element={<ResetPassword />} />

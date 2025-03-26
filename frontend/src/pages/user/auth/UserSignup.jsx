@@ -3,11 +3,12 @@ import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { Eye, EyeClosedIcon } from "lucide-react";
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const UserSignup = () => {
+  const { setIsAuthenticated, setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const navigateTo = useNavigate();
   const {
@@ -16,8 +17,25 @@ const UserSignup = () => {
     formState: { errors },
   } = useForm();
 
+  // const handleRegister = async (data) => {
+  //   data.phone = `+977${data.phone}`;
+  //   await axios
+  //     .post("http://localhost:5000/api/v1/user/register", data, {
+  //       withCredentials: true,
+  //       headers: { "Content-Type": "application/json" },
+  //     })
+  //     .then((res) => {
+  //       toast.success(res.data.message);
+  //       navigateTo(`/otp-verification/${data.email}/${data.phone}`);
+  //     })
+  //     .catch((error) => {
+  //       toast.error(error.response.data.message);
+  //     });
+  // };
+
   const handleRegister = async (data) => {
     data.phone = `+977${data.phone}`;
+    console.log("Before axios call");
     await axios
       .post("http://localhost:5000/api/v1/user/register", data, {
         withCredentials: true,
@@ -25,7 +43,10 @@ const UserSignup = () => {
       })
       .then((res) => {
         toast.success(res.data.message);
-        navigateTo(`/otp-verification/${data.email}/${data.phone}`);
+        setUser(res.data.user);
+        // setIsAuthenticated(true);
+        // Navigate to verification prompt instead of OTP verification
+        navigateTo(`/verification-prompt/${data.email}/${data.phone}`);
       })
       .catch((error) => {
         toast.error(error.response.data.message);

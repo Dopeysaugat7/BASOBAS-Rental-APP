@@ -7,6 +7,12 @@ const router = express.Router();
 // Authentication Routes
 router.post("/register", userController.register);
 router.post("/otp-verification", userController.verifyOTP);
+router.post("/send-verification", userController.sendVerification);
+router.post(
+  "/resend-verification",
+  isAuthenticated,
+  userController.resendVerification
+);
 router.post("/login", userController.login);
 router.get("/logout", isAuthenticated, userController.logout);
 
