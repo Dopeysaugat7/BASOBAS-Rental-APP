@@ -1,0 +1,661 @@
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+export const UserProfile = () => {
+  const { user, setUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState("");
+
+  const {
+    register: profileRegister,
+    handleSubmit: handleProfileSubmit,
+    reset: profileReset,
+    watch: profileWatch,
+    setValue: setProfileValue,
+    formState: { errors: profileErrors, isSubmitting: isProfileSubmitting },
+  } = useForm();
+
+  const {
+    register: passwordRegister,
+    handleSubmit: handlePasswordSubmit,
+    reset: passwordReset,
+    watch: passwordWatch,
+    formState: { errors: passwordErrors, isPasswordSubmitting },
+  } = useForm();
+
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      profileReset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        bio: user.bio || "",
+        username: user.username || "",
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth) : null,
+      });
+      setProfilePicturePreview(user.profilePicture || "");
+    }
+  }, [user, profileReset]);
+
+  const handleVerifyEmail = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/user/send-verification",
+        {
+          email: user.email,
+          phone: user.phone,
+          verificationMethod: "email",
+        },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.data.success) {
+        navigate(`/otp-verification/${user.email}/${user.phone}`, {
+          state: {
+            fromProfile: true,
+            from: location,
+          },
+          replace: true,
+        });
+      } else {
+        toast.error(response.data.message || "Verification failed");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send verification email"
+      );
+    }
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file
+    if (!file.type.match("image.*")) {
+      toast.error("Please select an image file (JPEG, PNG, GIF)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setProfilePicture(file);
+    const reader = new FileReader();
+    reader.onload = () => setProfilePicturePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const updateProfile = async (data) => {
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+
+      // Append all fields
+      formData.append("name", data.name || "");
+      formData.append("phone", data.phone || "");
+      if (data.bio) formData.append("bio", data.bio);
+      if (data.username) formData.append("username", data.username);
+      if (data.dateOfBirth) {
+        formData.append(
+          "dateOfBirth",
+          data.dateOfBirth.toISOString().split("T")[0]
+        );
+      }
+      if (profilePicture instanceof File) {
+        formData.append("profile", profilePicture);
+      }
+
+      const response = await axios.put(
+        "http://localhost:5000/api/v1/user/me/update",
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setUser(response.data.user);
+      setProfilePicturePreview(response.data.user.profilePicture);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Update error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Profile update failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const changePassword = async (data) => {
+    try {
+      setIsLoading(true);
+
+      // Ensure all fields are properly formatted
+      const payload = {
+        currentPassword: data.currentPassword.trim(),
+        newPassword: data.newPassword.trim(),
+      };
+
+      await axios.post(
+        "http://localhost:5000/api/v1/user/me/change-password",
+        payload,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.success("Password changed successfully");
+      passwordReset({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Password change error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Error changing password";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsLoading(true);
+      await axios.delete("http://localhost:5000/api/v1/user/me/delete-user", {
+        withCredentials: true,
+      });
+
+      toast.success("Account deleted successfully");
+      logout();
+      navigate("/");
+    } catch (error) {
+      const message = error.response?.data?.message || "Error deleting account";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-6 max-w-full">
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isLoading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isLoading ? "Deleting..." : "Delete Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="bookings">My Bookings</TabsTrigger>
+        </TabsList>
+
+        <div className="mt-6">
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <form onSubmit={handleProfileSubmit(updateProfile)}>
+              <div className="flex sm:flex-row items-start gap-6 mb-8 dark:bg-[#0f172b] p-6 rounded-lg border-1">
+                <div className="flex flex-col items-center">
+                  <Avatar className="h-24 w-24 mb-4">
+                    <AvatarImage
+                      src={
+                        profilePicturePreview ||
+                        user?.profilePicture ||
+                        "/default-image.svg"
+                      }
+                      alt={user?.name}
+                      className="object-cover"
+                    />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="relative">
+                    <Button variant="outline" size="sm" type="button">
+                      <Label
+                        htmlFor="profilePicture"
+                        className="cursor-pointer"
+                      >
+                        Change Photo
+                      </Label>
+                    </Button>
+                    <Input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={handleProfilePictureChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 w-full space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name" className="text-sm font-medium">
+                        Full Name
+                      </Label>
+                      <Input
+                        id="name"
+                        className="text-xl font-semibold mt-1"
+                        {...profileRegister("name", {
+                          required: "Full name is required",
+                        })}
+                        placeholder="Your name"
+                      />
+                      {profileErrors.name && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {profileErrors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="username" className="text-sm font-medium">
+                        Username
+                      </Label>
+                      <div className="flex items-center mt-1">
+                        <span className="text-gray-600 mr-1">@</span>
+                        <Input
+                          id="username"
+                          className="flex-1"
+                          {...profileRegister("username")}
+                          placeholder="username"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Card className="border rounded-lg mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Input
+                      id="bio"
+                      {...profileRegister("bio")}
+                      placeholder="Tell us about yourself"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          {profileWatch("dateOfBirth") ? (
+                            format(profileWatch("dateOfBirth"), "PPP")
+                          ) : (
+                            <span>Select your date of birth</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={profileWatch("dateOfBirth")}
+                          onSelect={(date) =>
+                            setProfileValue("dateOfBirth", date)
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      {...profileRegister("email")}
+                      placeholder="your@email.com"
+                      disabled
+                      className="opacity-70 cursor-not-allowed"
+                    />
+                    {!user?.accountVerified && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={handleVerifyEmail}
+                        disabled={isLoading}
+                        className="p-0 h-auto text-sm"
+                      >
+                        Verify your email
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      {...profileRegister("phone", {
+                        required: "Phone is required",
+                      })}
+                      placeholder="+1234567890"
+                    />
+                    {profileErrors.phone && (
+                      <p className="text-sm text-red-500">
+                        {profileErrors.phone.message}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+                <div className="flex justify-end mr-6">
+                  <Button
+                    type="submit"
+                    disabled={isProfileSubmitting || isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save All Changes"}
+                  </Button>
+                </div>
+              </Card>
+
+              {/* <div className="flex justify-end mb-6">
+                <Button
+                  type="submit"
+                  disabled={isProfileSubmitting || isLoading}
+                >
+                  {isLoading ? "Saving..." : "Save All Changes"}
+                </Button>
+              </div> */}
+            </form>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-6">
+            <Card className="border rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Account Verification</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                  <div>
+                    <p className="font-medium">Email Verified</p>
+                    <p className="text-sm text-gray-600">{user?.email}</p>
+                  </div>
+                  {user?.accountVerified ? (
+                    <span className="text-green-600 text-sm font-medium">
+                      Verified
+                    </span>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleVerifyEmail}
+                      disabled={isLoading}
+                    >
+                      Verify
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                  <div>
+                    <p className="font-medium">Phone Verified</p>
+                    <p className="text-sm text-gray-600">{user?.phone}</p>
+                  </div>
+                  <Button variant="outline" size="sm" disabled>
+                    Verify
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Password Change Form - Now Independent */}
+            <Card className="border rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Change Password</CardTitle>
+              </CardHeader>
+              <form onSubmit={handlePasswordSubmit(changePassword)}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      {...passwordRegister("currentPassword", {
+                        required: "Current password is required",
+                      })}
+                    />
+                    {passwordErrors.currentPassword && (
+                      <p className="text-sm text-red-500">
+                        {passwordErrors.currentPassword.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      {...passwordRegister("newPassword", {
+                        required: "New password is required",
+                        minLength: {
+                          value: 8,
+                          message: "Password must be at least 8 characters",
+                        },
+                        maxLength: {
+                          value: 32,
+                          message: "Password cannot exceed 32 characters",
+                        },
+                      })}
+                    />
+                    {passwordErrors.newPassword && (
+                      <p className="text-sm text-red-500">
+                        {passwordErrors.newPassword.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">
+                      Confirm New Password
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      {...passwordRegister("confirmPassword", {
+                        required: "Please confirm your password",
+                        validate: (value) =>
+                          value === passwordWatch("newPassword") ||
+                          "Passwords don't match",
+                      })}
+                    />
+                    {passwordErrors.confirmPassword && (
+                      <p className="text-sm text-red-500">
+                        {passwordErrors.confirmPassword.message}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end mt-5">
+                  <Button
+                    type="submit"
+                    disabled={isPasswordSubmitting || isLoading}
+                  >
+                    {isLoading ? "Updating..." : "Change Password"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+
+            <Card className="border rounded-lg border-destructive">
+              <CardHeader>
+                <CardTitle className="text-lg text-destructive">
+                  Delete Account
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Once you delete your account, there is no going back. Please
+                  be certain.
+                </p>
+              </CardContent>
+              <CardFooter className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isLoading}
+                >
+                  Delete Account
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-6">
+            {/* Bookings content */}
+            <Card className="border rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">My Bookings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-bold">Ocean View Villa</h3>
+                      <p className="text-gray-400">Miami, Florida</p>
+                    </div>
+                    <span className="text-green-400 text-sm font-medium">
+                      Upcoming
+                    </span>
+                  </div>
+                  <p className="text-sm mt-2">Check-in: Mar 15, 2025</p>
+                  <div className="flex justify-end mt-3">
+                    <Button variant="link" className="text-blue-600 p-0 h-auto">
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-bold">Mountain Retreat</h3>
+                      <p className="text-gray-400">Aspen, Colorado</p>
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Completed
+                    </span>
+                  </div>
+                  <p className="text-sm mt-2">Check-in: Feb 1, 2025</p>
+                  <div className="flex justify-end mt-3">
+                    <Button variant="link" className="text-blue-600 p-0 h-auto">
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">My Reviews</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                  <h3 className="font-bold">John Host</h3>
+                  <p className="text-gray-400">Ocean View Villa</p>
+                  <p className="mt-2 text-gray-50">
+                    "Sarah was a wonderful guest! Very respectful of the
+                    property and great communication throughout their stay."
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
+  );
+};
+
+export default UserProfile;

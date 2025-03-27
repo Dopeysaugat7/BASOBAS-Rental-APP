@@ -1,13 +1,14 @@
 import "./App.css";
 import ErrorPage from "./pages/NotFound";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Outlet,
+} from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Home from "./pages/user/Home";
-import UserLogin from "./pages/user/auth/UserLogin";
-import UserSignup from "./pages/user/auth/UserSignup";
-import UserDashboard from "./pages/user/UserDashboard";
-import UserProfile from "./pages/user/UserProfile";
 import SuperadminLogin from "./pages/superadmin/SuperadminLogin";
 import SuperadminSignup from "./pages/superadmin/SuperadminSignup";
 import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
@@ -19,6 +20,10 @@ import UserAuth from "./pages/user/auth/UserAuth";
 import ThemeToggle from "./components/ThemeToggle";
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import VerificationPrompt from "./pages/user/auth/VerificationPrompt";
+import Userdashboard from "./pages/user/dashboard/UserDashboard";
+import UserProfile from "./pages/user/dashboard/UserProfile";
+import Navbar from "./components/Navbar";
+import LayoutWithNavbar from "./pages/user/LayoutWithNavbar";
 
 function App() {
   return (
@@ -26,10 +31,13 @@ function App() {
       {/* <ThemeToggle /> */}
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route element={<ProtectedRoutes requireVerification={true} />}>
-          <Route path="dashboard" element={<UserDashboard />} />
-          <Route path="profile" element={<UserProfile />} />
+        <Route element={<LayoutWithNavbar />}>
+          <Route path="/" element={<Home />} />
+          <Route element={<ProtectedRoutes requireVerification={true} />}>
+            <Route path="/dashboard" element={<Userdashboard />}>
+              <Route path="profile" element={<UserProfile />} />
+            </Route>
+          </Route>
         </Route>
 
         <Route path="/auth" element={<UserAuth />} />

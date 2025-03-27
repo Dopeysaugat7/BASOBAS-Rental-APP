@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
@@ -8,6 +9,7 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState();
   const [loading, setLoading] = useState(true);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getUser = async () => {
@@ -43,7 +45,37 @@ const AuthProvider = ({ children }) => {
       }
     };
     getUser();
-  }, []);
+  }, [user]);
+  const updateVerificationStatus = (status) => {
+    setNeedsVerification(!status);
+    if (user) {
+      setUser({ ...user, accountVerified: status });
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Call backend logout if needed (optional)
+      await axios.post(
+        "http://localhost:5000/api/v1/user/logout",
+        {},
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Clear frontend state
+      setUser(null);
+      localStorage.removeItem("user");
+
+      // Remove cookie on client side (if needed)
+      document.cookie =
+        "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+
+      // Redirect
+      navigate("/auth");
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -55,6 +87,8 @@ const AuthProvider = ({ children }) => {
         loading,
         needsVerification,
         setNeedsVerification,
+        updateVerificationStatus,
+        logout,
       }}
     >
       {children}

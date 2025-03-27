@@ -39,12 +39,13 @@ const ProtectedRoutes = ({ requireVerification = false }) => {
                   {user?.verificationMethod === "email" ? " email" : " phone "}
                   for the verification link or
                   <button
-                    onClick={() => (window.location.href = "/verify-account")}
+                    onClick={() =>
+                      (window.location.href = "/dashboard/profile")
+                    }
                     className="ml-1 text-blue-600 hover:text-blue-800 underline"
                   >
                     verify now
                   </button>
-                  .
                 </p>
               </div>
             </div>

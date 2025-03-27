@@ -1,16 +1,22 @@
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const OtpVerification = () => {
-  const { isAuthenticated, setIsAuthenticated, setUser } = useAuth();
+  const {
+    isAuthenticated,
+    setIsAuthenticated,
+    updateVerificationStatus,
+    setUser,
+  } = useAuth();
   const { email, phone } = useParams();
   const [otp, setOtp] = useState(["", "", "", "", ""]);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const navigateTo = useNavigate();
+  const location = useLocation();
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -58,6 +64,14 @@ const OtpVerification = () => {
         setIsAuthenticated(true);
         setUser(res.data.user);
         navigateTo("/");
+        // Redirect based on where verification was initiated
+        if (location.state?.fromProfile) {
+          updateVerificationStatus(true);
+          navigateTo("/dashboard/profile", { replace: true });
+        } else {
+          const from = location.state?.from?.pathname || "/";
+          navigateTo(from, { replace: true });
+        }
       })
       .catch((err) => {
         toast.error(err.response?.data?.message || "Verification failed");
@@ -91,9 +105,13 @@ const OtpVerification = () => {
     }
   };
 
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
-  }
+  // Only redirect if coming from auth flow (not profile verification)
+  useEffect(() => {
+    if (isAuthenticated && !location.state?.fromProfile) {
+      const from = location.state?.from?.pathname || "/";
+      navigateTo(from, { replace: true });
+    }
+  }, [isAuthenticated, navigateTo, location]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent py-12 px-4 sm:px-6 lg:px-8">

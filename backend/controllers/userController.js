@@ -5,6 +5,10 @@ import { sendEmail } from "../utils/sendEmail.js";
 import twilio from "twilio";
 import { sendToken } from "../utils/sendToken.js";
 import crypto from "crypto";
+import { uploadProfilePicture } from "../utils/multer.js";
+import fs from "fs";
+import path from "path";
+import bcrypt from "bcrypt";
 
 let client;
 
@@ -335,18 +339,9 @@ export const getUser = catchAsyncError(async (req, res, next) => {
       });
     }
 
-    // Return user data without sensitive information
-    const userData = {
-      _id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      phone: req.user.phone,
-      accountVerified: req.user.accountVerified,
-    };
-
     res.status(200).json({
       success: true,
-      user: userData,
+      user: req.user,
     });
   } catch (error) {
     next(error);
@@ -421,4 +416,145 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
   await user.save();
 
   sendToken(user, 200, "Password Reset Successfully", res);
+});
+
+// Middleware to handle profile picture upload
+export const uploadUserPhoto = uploadProfilePicture;
+
+// Update User Profile (with file upload support)
+export const updateUser = catchAsyncError(async (req, res, next) => {
+  try {
+    // Process file upload first
+    let profilePicturePath;
+    if (req.file) {
+      profilePicturePath = `/uploads/profile-pictures/${req.file.filename}`;
+
+      // Delete old profile picture if exists
+      const user = await User.findById(req.user._id);
+      if (user.profilePicture && user.profilePicture !== "default-image.svg") {
+        const oldPath = path.join(process.cwd(), user.profilePicture);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+    }
+
+    const updates = {
+      ...req.body,
+      ...(profilePicturePath && { profilePicture: profilePicturePath }),
+    };
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!user) {
+      throw new ErrorHandler("User not found", 404);
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    // Clean up uploaded file if error occurred
+    if (req.file) {
+      const filePath = path.join(
+        process.cwd(),
+        "uploads/profile-pictures",
+        req.file.filename
+      );
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    next(error);
+  }
+});
+
+// Delete User Account (with profile picture cleanup)
+export const deleteUser = catchAsyncError(async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    // Delete profile picture if it exists and isn't the default
+    if (user.profilePicture && user.profilePicture !== "default-image.svg") {
+      const imagePath = path.join(
+        process.cwd(),
+        "uploads/profile-pictures",
+        path.basename(user.profilePicture)
+      );
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    // Use deleteOne() or findByIdAndDelete() instead of remove()
+    await User.deleteOne({ _id: req.user._id });
+
+    // Alternative: await user.deleteOne();
+
+    // Clear cookie if using cookie-based auth
+    res.cookie("token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return next(new ErrorHandler("Failed to delete user account", 500));
+  }
+});
+
+// Change user password
+export const changePassword = catchAsyncError(async (req, res, next) => {
+  // 1. Properly destructure the request body
+  const { currentPassword, newPassword } = req.body;
+
+  // 2. Add validation for empty strings
+  if (!currentPassword?.trim() || !newPassword?.trim()) {
+    return next(
+      new ErrorHandler("Both current and new passwords are required", 400)
+    );
+  }
+
+  // 3. Find user with password field
+  const user = await User.findById(req.user._id).select("+password");
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  // 4. Verify current password
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    return next(new ErrorHandler("Current password is incorrect", 401));
+  }
+
+  // 5. Validate new password
+  if (newPassword.length < 8) {
+    return next(
+      new ErrorHandler("Password must be at least 8 characters", 400)
+    );
+  }
+
+  // 6. Update password
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+
+  // 7. Send success response
+  res.status(200).json({
+    success: true,
+    message: "Password updated successfully",
+  });
 });

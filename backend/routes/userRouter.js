@@ -14,10 +14,25 @@ router.post(
   userController.resendVerification
 );
 router.post("/login", userController.login);
-router.get("/logout", isAuthenticated, userController.logout);
+router.post("/logout", isAuthenticated, userController.logout);
 
 // User Routes
 router.get("/me", isAuthenticated, userController.getUser);
+router
+  .route("/me/update")
+  .put(
+    isAuthenticated,
+    userController.uploadUserPhoto,
+    userController.updateUser
+  );
+router.delete("/me/delete-user", isAuthenticated, userController.deleteUser);
+router.post(
+  "/me/change-password",
+  isAuthenticated,
+  userController.changePassword
+);
+
+router.route("/me/delete").delete(isAuthenticated, userController.deleteUser);
 
 // Password Reset Routes
 router.post("/password/forgot", userController.forgotPassword);
