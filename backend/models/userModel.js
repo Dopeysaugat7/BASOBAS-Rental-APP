@@ -40,6 +40,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     maxlength: 500,
   },
+  properties: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+    },
+  ],
   accountVerified: {
     type: Boolean,
     default: false,

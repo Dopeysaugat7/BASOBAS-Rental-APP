@@ -45,7 +45,11 @@ const AuthProvider = ({ children }) => {
       }
     };
     getUser();
-  }, [user]);
+    return () => {
+      // Cleanup if component unmounts
+      // (axios cancellation would go here if not using timeout)
+    };
+  }, []);
   const updateVerificationStatus = (status) => {
     setNeedsVerification(!status);
     if (user) {

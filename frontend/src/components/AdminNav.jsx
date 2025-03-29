@@ -1,21 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Home,
-  Users,
-  CreditCard,
-  Activity,
-  Star,
-  MoreHorizontal,
-  UserRound,
-  Plus,
-  CheckCircle,
-  Clock,
-  XCircle,
-  CalendarOff,
-  ChevronDown,
-} from "lucide-react";
+import { MoreHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,39 +16,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import { useState } from "react";
-
-const navItems = [
-  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  {
-    path: "/properties",
-    icon: Home,
-    label: "Properties",
-    subItems: [
-      { path: "/properties/add", icon: Plus, label: "Add Property" },
-      {
-        path: "/properties/active",
-        icon: CheckCircle,
-        label: "Active Properties",
-      },
-      { path: "/properties/pending", icon: Clock, label: "Pending Properties" },
-      {
-        path: "/properties/rejected",
-        icon: XCircle,
-        label: "Rejected Properties",
-      },
-      {
-        path: "/properties/expired",
-        icon: CalendarOff,
-        label: "Expired Properties",
-      },
-    ],
-  },
-  { path: "/leads", icon: Users, label: "Leads" },
-  { path: "/billings", icon: CreditCard, label: "Billings" },
-  { path: "/activity", icon: Activity, label: "Activity Logs" },
-  { path: "/favorites", icon: Star, label: "Favorites" },
-  { path: "/dashboard/profile", icon: UserRound, label: "Profile" },
-];
+import { navItems } from "@/data";
 
 export default function AdminNav() {
   const location = useLocation();
@@ -73,7 +26,7 @@ export default function AdminNav() {
   return (
     <>
       {/* Desktop Navigation */}
-      <div className="hidden lg:sticky lg:inset-y-0 lg:top-16 lg:left-0 lg:mt-10 lg:mb-10 lg:block lg:w-64 lg:h-[75vh] lg:border-1 rounded-xl dark:bg-[#0f172b] lg:overflow-y-auto">
+      <div className="hidden lg:sticky lg:inset-y-0 lg:top-16 lg:left-0 lg:mt-10 lg:mb-10 lg:block lg:w-64 lg:h-[75vh] lg:border-1 rounded-xl dark:bg-[#0f172b] lg:overflow-y-auto shadow-md">
         <div className="flex h-full flex-col gap-4 px-4 py-6">
           <h2 className="px-4 text-lg font-semibold hidden lg:block">
             Navigation

@@ -82,7 +82,7 @@ export const Navbar = () => {
                 </Link>
               </Button>
               <Button className="rounded-full" variant={"outline"} asChild>
-                <Link to="/host">
+                <Link to="/dashboard/add-property">
                   <span className="hidden sm:inline font-semibold self-center">
                     List your property
                   </span>

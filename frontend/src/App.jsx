@@ -24,6 +24,10 @@ import Userdashboard from "./pages/user/dashboard/UserDashboard";
 import UserProfile from "./pages/user/dashboard/UserProfile";
 import Navbar from "./components/Navbar";
 import LayoutWithNavbar from "./pages/user/LayoutWithNavbar";
+import AddProperty from "./pages/user/dashboard/AddProperty";
+import ActiveProperties from "./pages/user/dashboard/ActiveProperty";
+import PropertyDetails from "./pages/user/PropertyDetails";
+import EditProperty from "./pages/user/EditProperty";
 
 function App() {
   return (
@@ -36,8 +40,12 @@ function App() {
           <Route element={<ProtectedRoutes requireVerification={true} />}>
             <Route path="/dashboard" element={<Userdashboard />}>
               <Route path="profile" element={<UserProfile />} />
+              <Route path="add-property" element={<AddProperty />} />
+              <Route path="my-properties" element={<ActiveProperties />} />
+              <Route path="edit/:id" element={<EditProperty />} />
             </Route>
           </Route>
+          <Route path="/:id" element={<PropertyDetails />} />
         </Route>
 
         <Route path="/auth" element={<UserAuth />} />

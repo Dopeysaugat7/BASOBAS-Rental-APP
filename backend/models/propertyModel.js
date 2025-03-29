@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const propertySchema = new Schema({
@@ -59,6 +59,7 @@ const propertySchema = new Schema({
     type: Number,
     required: true,
     min: 1,
+    default: 1,
   },
   builtUpArea: {
     type: Number,
@@ -95,6 +96,7 @@ const propertySchema = new Schema({
   pricePerDay: {
     type: Number,
     min: 0,
+    default: 0,
   }, // Optional daily rate
   securityDeposit: {
     type: Number,
@@ -114,6 +116,7 @@ const propertySchema = new Schema({
         "Wifi",
         "Air Conditioning",
         "Heating",
+        "petFriendly",
         "TV",
         "Washing Machine",
         "Parking",
@@ -167,6 +170,14 @@ const propertySchema = new Schema({
         required: true,
       },
     },
+    location: {
+      type: {
+        type: String,
+        default: "Point",
+        enum: ["Point"],
+      },
+      coordinates: [Number], // [longitude, latitude]
+    },
     landmark: {
       type: String,
     }, // Optional
@@ -204,6 +215,34 @@ const propertySchema = new Schema({
     type: Number,
     default: 1,
   }, // Min rental duration
+
+  // Admin Approval System
+  approvalStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+  approvedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
+  approvedAt: {
+    type: Date,
+  },
+  rejectionReason: {
+    type: String,
+    maxlength: 500,
+  },
+
+  // Property Expiry
+  expiryDate: {
+    type: Date,
+    default: () => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default 1 year from now
+  },
+  isExpired: {
+    type: Boolean,
+    default: false,
+  },
 
   // Images
   images: [
@@ -253,17 +292,34 @@ const propertySchema = new Schema({
     min: 0,
     max: 5,
   },
-  reviews: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Review",
-    },
-  ],
+  // Reviews: [
+  //   {
+  //     type: Schema.Types.ObjectId,
+  //     ref: "Review",
+  //   },
+  // ],
 });
 
 // Update 'updatedAt' on save
 propertySchema.pre("save", function (next) {
   this.updatedAt = Date.now();
+
+  // Update location coordinates if changed
+  if (this.isModified("address.coordinates")) {
+    this.address.location = {
+      type: "Point",
+      coordinates: [this.address.coordinates.lng, this.address.coordinates.lat],
+    };
+  }
+
+  // Check if property has expired
+  if (this.expiryDate && new Date() > this.expiryDate) {
+    this.isExpired = true;
+    this.isAvailable = false;
+  } else {
+    this.isExpired = false;
+  }
+
   next();
 });
 
@@ -273,6 +329,9 @@ propertySchema.index({ "address.city": 1 });
 propertySchema.index({ "address.coordinates": "2dsphere" });
 propertySchema.index({ pricePerMonth: 1 });
 propertySchema.index({ propertyType: 1 });
-propertySchema.index({ "bhkConfiguration.bedrooms": 1 }); // For BHK-based searches
+propertySchema.index({ "bhkConfiguration.bedrooms": 1 });
+propertySchema.index({ approvalStatus: 1 });
+propertySchema.index({ expiryDate: 1 });
+propertySchema.index({ isExpired: 1 });
 
 export const Property = mongoose.model("Property", propertySchema);
