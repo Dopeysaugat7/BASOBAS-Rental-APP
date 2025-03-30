@@ -218,9 +218,12 @@ const MyProperties = () => {
               <div className="relative">
                 <AspectRatio ratio={16 / 9}>
                   <Link to={`/${property._id}`}>
-                    {property.images?.[0]?.url ? (
+                    {property.images?.length > 0 ? (
                       <img
-                        src={property.images?.[0]?.url}
+                        src={
+                          property.images.find((img) => img.isPrimary)?.url ||
+                          property.images[0].url
+                        }
                         alt={property.title}
                         className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
                         loading="lazy"
@@ -271,7 +274,7 @@ const MyProperties = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link
-                          to={`/properties/edit/${property._id}`}
+                          to={`/dashboard/edit/${property._id}`}
                           className="flex items-center gap-2 w-full"
                         >
                           <Edit className="h-4 w-4" />

@@ -59,6 +59,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useCreateProperty } from "@/hooks/useProperties";
 
 // Form Schema (simplified - removed coordinates from address)
 const formSchema = z.object({
@@ -119,6 +120,8 @@ const AddProperty = () => {
   const [images, setImages] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createMutation = useCreateProperty();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -250,22 +253,7 @@ const AddProperty = () => {
         }
       }
 
-      const res = await axios.post(
-        "http://localhost:5000/api/properties",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(progress);
-          },
-        }
-      );
+      await createMutation.mutateAsync(formData);
 
       toast.success("Property created successfully!");
       form.reset();

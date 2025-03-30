@@ -35,7 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,13 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useDeletePropertyImage,
+  useProperty,
+  useSetPrimaryImage,
+  useUpdateProperty,
+  useUploadPropertyImages,
+} from "@/hooks/useProperties";
 
 // Form Schema
 const formSchema = z.object({
@@ -147,115 +154,190 @@ const EditProperty = () => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  // const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormReady, setIsFormReady] = useState(false);
 
+  const updateMutation = useUpdateProperty();
+  const uploadImagesMutation = useUploadPropertyImages();
+  const setPrimaryImageMutation = useSetPrimaryImage();
+  const deleteImageMutation = useDeletePropertyImage();
+
+  // Initialize form with default values
+  // const form = useForm({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: {
+  //     title: "",
+  //     description: "",
+  //     propertyType: "House",
+  //     bhkConfiguration: {
+  //       bedrooms: 1,
+  //       bathrooms: 1,
+  //       halls: 1,
+  //       kitchens: 1,
+  //     },
+  //     totalRooms: 4,
+  //     builtUpArea: 0,
+  //     carpetArea: 0,
+  //     furnishingStatus: "Unfurnished",
+  //     pricePerMonth: 0,
+  //     pricePerDay: 0,
+  //     securityDeposit: 0,
+  //     amenities: [],
+  //     address: {
+  //       street: "",
+  //       city: "",
+  //       state: "",
+  //       postalCode: "",
+  //       country: "Nepal",
+  //       landmark: "",
+  //       coordinates: { lat: 0, lng: 0 },
+  //     },
+  //     houseRules: {
+  //       petsAllowed: false,
+  //       smokingAllowed: false,
+  //       eventsAllowed: false,
+  //       extraRules: "",
+  //     },
+  //     isAvailable: true,
+  //     availableFrom: new Date(),
+  //     minimumStayMonths: 1,
+  //     maxGuests: 1,
+  //   },
+  // });
+
+  // Fetch property data
+  const { data: property, isLoading, isError, error } = useProperty(id);
+  const { mutate: updateProperty, variables } = useUpdateProperty();
+  const uploadProgress = variables?.id === id ? variables.uploadProgress : 0;
+  // Initialize form
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      propertyType: "Apartment",
-      bhkConfiguration: {
-        bedrooms: 1,
-        bathrooms: 1,
-        halls: 1,
-        kitchens: 1,
-      },
-      totalRooms: 4,
-      builtUpArea: 0,
-      carpetArea: undefined,
-      furnishingStatus: "Unfurnished",
-      pricePerMonth: 0,
-      pricePerDay: undefined,
-      securityDeposit: undefined,
-      amenities: [],
-      address: {
-        street: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "Nepal",
-        landmark: "",
-        coordinates: {
-          lat: 0,
-          lng: 0,
-        },
-      },
-      houseRules: {
-        petsAllowed: false,
-        smokingAllowed: false,
-        eventsAllowed: false,
-        extraRules: "",
-      },
-      isAvailable: true,
-      availableFrom: new Date(),
-      minimumStayMonths: 1,
-      maxGuests: 1,
-    },
   });
 
-  const {
-    data: property,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["property", id],
-    queryFn: async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/properties/${id}`,
-        {
-          withCredentials: true,
-        }
-      );
-      return res.data;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setExistingImages(data.images || []);
+  // Memoize the handleInitialize function
+  const handleInitialize = useCallback(
+    (data) => {
+      if (!data) return;
 
-        const formData = {
-          ...data,
-          availableFrom: new Date(data.availableFrom),
-          amenities: data.amenities || [],
-          address: {
-            street: data.address?.street || "",
-            city: data.address?.city || "",
-            state: data.address?.state || "",
-            postalCode: data.address?.postalCode || "",
-            country: data.address?.country || "Nepal",
-            landmark: data.address?.landmark || "",
-            coordinates: data.address?.coordinates || { lat: 0, lng: 0 },
-          },
-          houseRules: {
-            petsAllowed: data.houseRules?.petsAllowed || false,
-            smokingAllowed: data.houseRules?.smokingAllowed || false,
-            eventsAllowed: data.houseRules?.eventsAllowed || false,
-            extraRules: data.houseRules?.extraRules || "",
-          },
-          bhkConfiguration: data.bhkConfiguration || {
-            bedrooms: 1,
-            bathrooms: 1,
-            halls: 1,
-            kitchens: 1,
-          },
-          totalRooms:
-            data.totalRooms ||
-            (data.bhkConfiguration?.bedrooms || 1) +
-              (data.bhkConfiguration?.bathrooms || 1) +
-              (data.bhkConfiguration?.halls || 1) +
-              (data.bhkConfiguration?.kitchens || 1),
-        };
+      console.log("Initializing form with:", data);
 
+      setExistingImages(data.images ?? []);
+
+      const defaults = {
+        title: "",
+        description: "",
+        propertyType: "House",
+        bhkConfiguration: {
+          bedrooms: 1,
+          bathrooms: 1,
+          halls: 1,
+          kitchens: 1,
+        },
+        totalRooms: 4,
+        builtUpArea: 0,
+        carpetArea: 0,
+        furnishingStatus: "Unfurnished",
+        pricePerMonth: 0,
+        pricePerDay: 0,
+        securityDeposit: 0,
+        amenities: [],
+        address: {
+          street: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: "Nepal",
+          landmark: "",
+          coordinates: { lat: 0, lng: 0 },
+        },
+        houseRules: {
+          petsAllowed: false,
+          smokingAllowed: false,
+          eventsAllowed: false,
+          extraRules: "",
+        },
+        isAvailable: true,
+        availableFrom: new Date(),
+        minimumStayMonths: 1,
+        maxGuests: 1,
+      };
+
+      const formData = {
+        title: data.title ?? defaults.title,
+        description: data.description ?? defaults.description,
+        propertyType: data.propertyType ?? defaults.propertyType,
+        bhkConfiguration: {
+          bedrooms:
+            data.bhkConfiguration?.bedrooms ??
+            defaults.bhkConfiguration.bedrooms,
+          bathrooms:
+            data.bhkConfiguration?.bathrooms ??
+            defaults.bhkConfiguration.bathrooms,
+          halls:
+            data.bhkConfiguration?.halls ?? defaults.bhkConfiguration.halls,
+          kitchens:
+            data.bhkConfiguration?.kitchens ??
+            defaults.bhkConfiguration.kitchens,
+        },
+        totalRooms: data.totalRooms ?? defaults.totalRooms,
+        builtUpArea: data.builtUpArea ?? defaults.builtUpArea,
+        carpetArea: data.carpetArea ?? defaults.carpetArea,
+        furnishingStatus: data.furnishingStatus ?? defaults.furnishingStatus,
+        pricePerMonth: data.pricePerMonth ?? defaults.pricePerMonth,
+        pricePerDay: data.pricePerDay ?? defaults.pricePerDay,
+        securityDeposit: data.securityDeposit ?? defaults.securityDeposit,
+        amenities: data.amenities ?? defaults.amenities,
+        address: {
+          street: data.address?.street ?? defaults.address.street,
+          city: data.address?.city ?? defaults.address.city,
+          state: data.address?.state ?? defaults.address.state,
+          postalCode: data.address?.postalCode ?? defaults.address.postalCode,
+          country: data.address?.country ?? defaults.address.country,
+          landmark: data.address?.landmark ?? defaults.address.landmark,
+          coordinates:
+            data.address?.coordinates ?? defaults.address.coordinates,
+        },
+        houseRules: {
+          petsAllowed:
+            data.houseRules?.petsAllowed ?? defaults.houseRules.petsAllowed,
+          smokingAllowed:
+            data.houseRules?.smokingAllowed ??
+            defaults.houseRules.smokingAllowed,
+          eventsAllowed:
+            data.houseRules?.eventsAllowed ?? defaults.houseRules.eventsAllowed,
+          extraRules:
+            data.houseRules?.extraRules ?? defaults.houseRules.extraRules,
+        },
+        isAvailable: data.isAvailable ?? defaults.isAvailable,
+        availableFrom: data.availableFrom
+          ? new Date(data.availableFrom)
+          : defaults.availableFrom,
+        minimumStayMonths: data.minimumStayMonths ?? defaults.minimumStayMonths,
+        maxGuests: data.maxGuests ?? defaults.maxGuests,
+      };
+
+      try {
         form.reset(formData);
+        setIsFormReady(true);
+      } catch (error) {
+        console.error("Failed to reset form:", error);
       }
     },
-  });
+    [form]
+  ); // Add all dependencies used inside the callback
 
-  // Calculate total rooms whenever BHK changes
+  // Set form values when property data is loaded
+  useEffect(() => {
+    if (property?.property) {
+      handleInitialize(property.property);
+      console.log("Property data fetched:", property.property.propertyType);
+    }
+  }, [property, handleInitialize]); // Now handleInitialize is stable
+
   const bhkConfig = form.watch("bhkConfiguration");
   useEffect(() => {
-    if (bhkConfig) {
+    if (bhkConfig && isFormReady) {
       const total =
         (bhkConfig.bedrooms || 0) +
         (bhkConfig.bathrooms || 0) +
@@ -263,7 +345,7 @@ const EditProperty = () => {
         (bhkConfig.kitchens || 0);
       form.setValue("totalRooms", total);
     }
-  }, [bhkConfig, form]);
+  }, [bhkConfig, form, isFormReady]);
 
   const handleImageUpload = (e) => {
     if (e.target.files) {
@@ -284,10 +366,7 @@ const EditProperty = () => {
 
   const removeExistingImage = async (imageId) => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/properties/${id}/images/${imageId}`,
-        { withCredentials: true }
-      );
+      await deleteImageMutation.mutateAsync({ id, imageId });
       setExistingImages(existingImages.filter((img) => img._id !== imageId));
       toast.success("Image removed successfully");
     } catch (error) {
@@ -296,12 +375,9 @@ const EditProperty = () => {
   };
 
   const setPrimaryImage = async (imageId) => {
+    console.log(imageId);
     try {
-      await axios.put(
-        `http://localhost:5000/api/properties/${id}/primary-image`,
-        { imageId },
-        { withCredentials: true }
-      );
+      await setPrimaryImageMutation.mutateAsync({ id, imageId });
       setExistingImages(
         existingImages.map((img) => ({
           ...img,
@@ -316,98 +392,55 @@ const EditProperty = () => {
     }
   };
 
-  const updateProperty = useMutation({
-    mutationFn: async (data) => {
-      const formData = new FormData();
-
-      // Append new images
-      images.forEach((image) => {
-        formData.append("images", image);
-      });
-
-      // Prepare property data with proper coordinates
-      const propertyData = {
-        ...data,
-        availableFrom: data.availableFrom.toISOString(),
-        address: JSON.stringify({
-          ...data.address,
-          coordinates: data.address.coordinates || { lat: 0, lng: 0 },
-        }),
-        bhkConfiguration: JSON.stringify({
-          bedrooms: Number(data.bhkConfiguration.bedrooms),
-          bathrooms: Number(data.bhkConfiguration.bathrooms),
-          halls: Number(data.bhkConfiguration.halls),
-          kitchens: Number(data.bhkConfiguration.kitchens),
-        }),
-        totalRooms: Number(data.totalRooms),
-        builtUpArea: Number(data.builtUpArea),
-        carpetArea: data.carpetArea ? Number(data.carpetArea) : undefined,
-        pricePerMonth: Number(data.pricePerMonth),
-        pricePerDay: data.pricePerDay ? Number(data.pricePerDay) : undefined,
-        securityDeposit: data.securityDeposit
-          ? Number(data.securityDeposit)
-          : undefined,
-        amenities: JSON.stringify(data.amenities || []),
-        houseRules: JSON.stringify({
-          ...data.houseRules,
-          extraRules: data.houseRules.extraRules || "",
-        }),
-        isAvailable: Boolean(data.isAvailable),
-        minimumStayMonths: Number(data.minimumStayMonths),
-        maxGuests: Number(data.maxGuests),
-      };
-
-      // Append all property data fields
-      Object.entries(propertyData).forEach(([key, value]) => {
-        if (value !== undefined) {
-          formData.append(key, value);
-        }
-      });
-
-      const res = await axios.put(
-        `http://localhost:5000/api/properties/${id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(progress);
-          },
-        }
-      );
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["property", id]);
-      queryClient.invalidateQueries(["myProperties"]);
-      toast.success("Property updated successfully!");
-      navigate(`/dashboard/my-properties/${id}`);
-    },
-    onError: (error) => {
-      console.error("Error details:", error.response?.data);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to update property. Please check your data and try again."
-      );
-    },
-    onSettled: () => {
-      setIsSubmitting(false);
-      setUploadProgress(0);
-    },
-  });
-
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
     if (images.length + existingImages.length < 3) {
       toast.error("Please have at least 3 images total");
       return;
     }
+
     setIsSubmitting(true);
-    updateProperty.mutate(data);
+
+    // Prepare the data for mutation
+    const payload = {
+      ...formData,
+      availableFrom: formData.availableFrom.toISOString(),
+      address: {
+        ...formData.address,
+        coordinates: formData.address.coordinates || { lat: 0, lng: 0 },
+      },
+      bhkConfiguration: {
+        bedrooms: Number(formData.bhkConfiguration.bedrooms),
+        bathrooms: Number(formData.bhkConfiguration.bathrooms),
+        halls: Number(formData.bhkConfiguration.halls),
+        kitchens: Number(formData.bhkConfiguration.kitchens),
+      },
+      totalRooms: Number(formData.totalRooms),
+      builtUpArea: Number(formData.builtUpArea),
+      carpetArea: formData.carpetArea ? Number(formData.carpetArea) : undefined,
+      pricePerMonth: Number(formData.pricePerMonth),
+      pricePerDay: formData.pricePerDay
+        ? Number(formData.pricePerDay)
+        : undefined,
+      securityDeposit: formData.securityDeposit
+        ? Number(formData.securityDeposit)
+        : undefined,
+      amenities: formData.amenities || [],
+      houseRules: {
+        ...formData.houseRules,
+        extraRules: formData.houseRules.extraRules || "",
+      },
+      isAvailable: Boolean(formData.isAvailable),
+      minimumStayMonths: Number(formData.minimumStayMonths),
+      maxGuests: Number(formData.maxGuests),
+    };
+
+    updateProperty(
+      { id, data: payload, images },
+      {
+        onSettled: () => setIsSubmitting(false),
+        onSuccess: () => navigate(`/${id}`),
+      }
+    );
   };
 
   const nextStep = () => {
@@ -449,7 +482,7 @@ const EditProperty = () => {
       case 2:
         return values.builtUpArea && values.pricePerMonth;
       case 3: {
-        const addr = values.address;
+        const addr = values.address || {};
         return (
           addr.street &&
           addr.city &&
@@ -468,7 +501,21 @@ const EditProperty = () => {
       <div className="container mx-auto px-4 py-8">
         <Skeleton className="h-10 w-48 mb-6" />
         <div className="space-y-6">
-          <Skeleton className="h-96 w-full" />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (!isFormReady) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Skeleton className="h-10 w-48 mb-6" />
+        <div className="space-y-6">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
         </div>
       </div>
     );
@@ -478,7 +525,7 @@ const EditProperty = () => {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <div className="text-destructive mb-4">
-          Failed to load property data.
+          Failed to load property data: {error.message}
         </div>
         <Button
           onClick={() => queryClient.refetchQueries(["property", id])}
@@ -588,7 +635,8 @@ const EditProperty = () => {
                           <FormLabel>Property Type*</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value}
+                            value={field.value || ""}
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -953,7 +1001,14 @@ const EditProperty = () => {
                               <Input
                                 type="date"
                                 {...field}
-                                value={field.value.toISOString().split("T")[0]}
+                                value={
+                                  field.value
+                                    ? format(
+                                        new Date(field.value),
+                                        "yyyy-MM-dd"
+                                      )
+                                    : format(new Date(), "yyyy-MM-dd")
+                                }
                                 onChange={(e) =>
                                   field.onChange(new Date(e.target.value))
                                 }

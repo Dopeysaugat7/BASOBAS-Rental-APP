@@ -89,35 +89,35 @@ export const createProperty = catchAsyncError(async (req, res, next) => {
   });
 });
 
-export const uploadImages = catchAsyncError(async (req, res, next) => {
-  const property = await Property.findById(req.params.id);
-  if (!property) {
-    return next(new ErrorHandler("Property not found", 404));
-  }
+// export const uploadImages = catchAsyncError(async (req, res, next) => {
+//   const property = await Property.findById(req.params.id);
+//   if (!property) {
+//     return next(new ErrorHandler("Property not found", 404));
+//   }
 
-  // Check ownership
-  if (property.host.toString() !== req.user._id.toString()) {
-    return next(
-      new ErrorHandler("Not authorized to update this property", 403)
-    );
-  }
+//   // Check ownership
+//   if (property.host.toString() !== req.user._id.toString()) {
+//     return next(
+//       new ErrorHandler("Not authorized to update this property", 403)
+//     );
+//   }
 
-  // Process uploaded files
-  const imageUrls = req.files.map((file) => ({
-    url: `/uploads/properties/${file.filename}`,
-    isPrimary: property.images.length === 0, // Set as primary if first image
-  }));
+//   // Process uploaded files
+//   const imageUrls = req.files.map((file) => ({
+//     url: `/uploads/properties/${file.filename}`,
+//     isPrimary: property.images.length === 0, // Set as primary if first image
+//   }));
 
-  // Add new images to property
-  property.images.push(...imageUrls);
-  await property.save();
+//   // Add new images to property
+//   property.images.push(...imageUrls);
+//   await property.save();
 
-  res.status(200).json({
-    success: true,
-    message: "Images uploaded successfully",
-    images: imageUrls,
-  });
-});
+//   res.status(200).json({
+//     success: true,
+//     message: "Images uploaded successfully",
+//     images: imageUrls,
+//   });
+// });
 
 // @desc    Approve/reject property (Admin only)
 // @route   PUT /api/properties/:id/approve
@@ -335,63 +335,17 @@ export const updateProperty = catchAsyncError(async (req, res, next) => {
     }),
   };
 
-  // If updating BHK configuration, recalculate total rooms
-  if (parsedBody.bhkConfiguration) {
-    parsedBody.totalRooms =
-      Number(parsedBody.bhkConfiguration.bedrooms) +
-      Number(parsedBody.bhkConfiguration.halls) +
-      Number(parsedBody.bhkConfiguration.kitchens) +
-      Number(parsedBody.bhkConfiguration.bathrooms);
+  // Handle image uploads if any
+  if (req.files && req.files.length > 0) {
+    const newImages = req.files.map((file) => ({
+      url: `/uploads/properties/${file.filename}`,
+      isPrimary: false,
+    }));
+
+    parsedBody.images = [...property.images, ...newImages];
   }
 
-  // Handle image uploads
-  if (req.files && req.files.images) {
-    const images = Array.isArray(req.files.images)
-      ? req.files.images
-      : [req.files.images];
-
-    const uploadPromises = images.map(async (file) => {
-      const result = await cloudinary.uploader.upload(file.tempFilePath, {
-        folder: "property_images",
-      });
-      return {
-        public_id: result.public_id,
-        url: result.secure_url,
-      };
-    });
-
-    parsedBody.images = [
-      ...property.images,
-      ...(await Promise.all(uploadPromises)),
-    ];
-  }
-
-  // If updating address, geocode if postal code changed
-  if (
-    parsedBody.address?.postalCode &&
-    parsedBody.address.postalCode !== property.address.postalCode
-  ) {
-    const loc = await geocoder.geocode(parsedBody.address.postalCode);
-    parsedBody.address.coordinates =
-      loc && loc[0]
-        ? { lat: loc[0].latitude, lng: loc[0].longitude }
-        : property.address.coordinates || { lat: 0, lng: 0 };
-  } else {
-    // Preserve existing coordinates if not updating postal code
-    parsedBody.address.coordinates = property.address.coordinates || {
-      lat: 0,
-      lng: 0,
-    };
-  }
-
-  // Reset approval status if significant changes are made
-  if (shouldRequireReapproval(parsedBody, property)) {
-    parsedBody.approvalStatus = "pending";
-    parsedBody.approvedBy = undefined;
-    parsedBody.approvedAt = undefined;
-    parsedBody.rejectionReason = undefined;
-  }
-
+  // Update the property
   property = await Property.findByIdAndUpdate(req.params.id, parsedBody, {
     new: true,
     runValidators: true,
@@ -404,26 +358,26 @@ export const updateProperty = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// Helper function to determine if reapproval is needed
-function shouldRequireReapproval(newData, existingProperty) {
-  const significantFields = [
-    "propertyType",
-    "bhkConfiguration",
-    "builtUpArea",
-    "furnishingStatus",
-    "address",
-  ];
+// // Helper function to determine if reapproval is needed
+// function shouldRequireReapproval(newData, existingProperty) {
+//   const significantFields = [
+//     "propertyType",
+//     "bhkConfiguration",
+//     "builtUpArea",
+//     "furnishingStatus",
+//     "address",
+//   ];
 
-  return significantFields.some((field) => {
-    if (field === "bhkConfiguration" || field === "address") {
-      return (
-        JSON.stringify(newData[field]) !==
-        JSON.stringify(existingProperty[field])
-      );
-    }
-    return newData[field] && newData[field] !== existingProperty[field];
-  });
-}
+//   return significantFields.some((field) => {
+//     if (field === "bhkConfiguration" || field === "address") {
+//       return (
+//         JSON.stringify(newData[field]) !==
+//         JSON.stringify(existingProperty[field])
+//       );
+//     }
+//     return newData[field] && newData[field] !== existingProperty[field];
+//   });
+// }
 
 // @desc    Delete property
 // @route   DELETE /api/properties/:id
@@ -446,8 +400,12 @@ export const deleteProperty = catchAsyncError(async (req, res, next) => {
 
   // Delete associated images from server
   if (property.images && property.images.length > 0) {
+    const uploadDir = path.join(
+      process.cwd(),
+      "../frontend/uploads/properties"
+    );
     property.images.forEach((image) => {
-      const imagePath = path.join(process.cwd(), image.url);
+      const imagePath = path.join(uploadDir, path.basename(image.url));
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
@@ -607,6 +565,49 @@ export const getProperty = catchAsyncError(async (req, res, next) => {
   });
 });
 
+// @desc    Upload property images
+// @route   PUT /api/properties/:id/images
+// @access  Private
+export const uploadImages = catchAsyncError(async (req, res, next) => {
+  const property = await Property.findById(req.params.id);
+  if (!property) {
+    return next(new ErrorHandler("Property not found", 404));
+  }
+
+  // Check ownership
+  if (property.host.toString() !== req.user._id.toString()) {
+    return next(
+      new ErrorHandler("Not authorized to update this property", 403)
+    );
+  }
+
+  if (!req.files || req.files.length === 0) {
+    return next(new ErrorHandler("No images uploaded", 400));
+  }
+
+  // Process uploaded files
+  const newImages = req.files.map((file) => ({
+    url: `/uploads/properties/${file.filename}`,
+    isPrimary: false,
+  }));
+
+  // Add new images to property
+  property.images.push(...newImages);
+
+  // If this is the first image, set it as primary
+  if (property.images.length === newImages.length) {
+    property.images[0].isPrimary = true;
+  }
+
+  await property.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Images uploaded successfully",
+    images: newImages,
+  });
+});
+
 // @desc    Set primary image
 // @route   PUT /api/properties/:id/primary-image
 // @access  Private
@@ -625,17 +626,20 @@ export const setPrimaryImage = catchAsyncError(async (req, res, next) => {
     );
   }
 
+  // Find the image to set as primary
+  const imageToSet = property.images.find(
+    (img) => img._id.toString() === imageId
+  );
+  if (!imageToSet) {
+    return next(new ErrorHandler("Image not found in property", 404));
+  }
+
   // Reset all images to non-primary
   property.images.forEach((img) => {
     img.isPrimary = false;
   });
 
   // Set the selected image as primary
-  const imageToSet = property.images.id(imageId);
-  if (!imageToSet) {
-    return next(new ErrorHandler("Image not found in property", 404));
-  }
-
   imageToSet.isPrimary = true;
   await property.save();
 
@@ -662,10 +666,16 @@ export const deleteImage = catchAsyncError(async (req, res, next) => {
     );
   }
 
-  const image = property.images.id(req.params.imageId);
-  if (!image) {
+  // Find the image to delete
+  const imageIndex = property.images.findIndex(
+    (img) => img._id.toString() === req.params.imageId
+  );
+
+  if (imageIndex === -1) {
     return next(new ErrorHandler("Image not found", 404));
   }
+
+  const imageToDelete = property.images[imageIndex];
 
   // Don't allow deleting if it's the only image
   if (property.images.length === 1) {
@@ -674,17 +684,18 @@ export const deleteImage = catchAsyncError(async (req, res, next) => {
     );
   }
 
-  // Delete image from server
-  const imagePath = path.join(process.cwd(), image.url);
+  // Delete image file from server
+  const uploadDir = path.join(process.cwd(), "../frontend/uploads/properties");
+  const imagePath = path.join(uploadDir, path.basename(imageToDelete.url));
   if (fs.existsSync(imagePath)) {
     fs.unlinkSync(imagePath);
   }
 
   // Remove image from array
-  property.images.pull({ _id: req.params.imageId });
+  property.images.splice(imageIndex, 1);
 
-  // If we deleted the primary image, set another one as primary
-  if (image.isPrimary && property.images.length > 0) {
+  // If we deleted the primary image, set the first remaining image as primary
+  if (imageToDelete.isPrimary && property.images.length > 0) {
     property.images[0].isPrimary = true;
   }
 

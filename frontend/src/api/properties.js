@@ -16,6 +16,20 @@ api.interceptors.response.use(
   }
 );
 
+// Helper to prepare FormData
+const toFormData = (data) => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined) return;
+    if (typeof value === "object") {
+      formData.append(key, JSON.stringify(value));
+    } else {
+      formData.append(key, value);
+    }
+  });
+  return formData;
+};
+
 export const propertyService = {
   getAll: async (filters = {}) => {
     const { data } = await api.get("/properties", { params: filters });
@@ -35,13 +49,31 @@ export const propertyService = {
     });
     return data;
   },
-  update: async (id, propertyData) => {
-    const { data } = await api.patch(`/properties/${id}`, propertyData, {
+  update: async (id, data) => {
+    const formData = toFormData(data);
+    const res = await api.patch(`/properties/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
+  delete: async (id) => {
+    await api.delete(`/properties/${id}`);
+  },
+  uploadImages: async (id, images) => {
+    const formData = new FormData();
+    images.forEach((image) => formData.append("images", image));
+    const { data } = await api.put(`/properties/${id}/images`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
-  delete: async (id) => {
-    await api.delete(`/properties/${id}`);
+  setPrimaryImage: async (id, imageId) => {
+    const { data } = await api.put(`/properties/${id}/primary-image`, {
+      imageId,
+    });
+    return data;
+  },
+  deleteImage: async (id, imageId) => {
+    await api.delete(`/properties/${id}/images/${imageId}`);
   },
 };
