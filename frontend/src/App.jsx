@@ -17,17 +17,19 @@ import OtpVerification from "./pages/user/auth/OtpVerification";
 import ForgotPassword from "./pages/user/auth/ForgotPassword";
 import ResetPassword from "./pages/user/auth/ResetPassword";
 import UserAuth from "./pages/user/auth/UserAuth";
-import ThemeToggle from "./components/ThemeToggle";
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import VerificationPrompt from "./pages/user/auth/VerificationPrompt";
-import Userdashboard from "./pages/user/dashboard/UserDashboard";
+import Userdashboard from "./pages/user/dashboard/UserdashboardLayout";
 import UserProfile from "./pages/user/dashboard/UserProfile";
-import Navbar from "./components/Navbar";
 import LayoutWithNavbar from "./pages/user/LayoutWithNavbar";
 import AddProperty from "./pages/user/dashboard/AddProperty";
 import ActiveProperties from "./pages/user/dashboard/ActiveProperty";
 import PropertyDetails from "./pages/user/PropertyDetails";
 import EditProperty from "./pages/user/EditProperty";
+import Billing from "./pages/user/dashboard/Billing";
+import { Favorites } from "./pages/user/dashboard/Favorites";
+import Dashboard from "./pages/user/dashboard/Dashboard";
+import VisitsDashboard from "./pages/user/dashboard/VisitLog";
 
 function App() {
   return (
@@ -39,10 +41,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route element={<ProtectedRoutes requireVerification={true} />}>
             <Route path="/dashboard" element={<Userdashboard />}>
+              <Route path="" element={<Dashboard />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="add-property" element={<AddProperty />} />
               <Route path="my-properties" element={<ActiveProperties />} />
               <Route path="edit/:id" element={<EditProperty />} />
+              <Route path="billings" element={<Billing />} />
+              <Route path="favorites" element={<Favorites />} />
+              <Route path="Visit-logs" element={<VisitsDashboard />} />
             </Route>
           </Route>
           <Route path="/:id" element={<PropertyDetails />} />

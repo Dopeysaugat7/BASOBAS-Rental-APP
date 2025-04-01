@@ -1,16 +1,12 @@
 import {
   LayoutDashboard,
   Home,
-  Users,
   CreditCard,
-  Activity,
   Star,
   UserRound,
   Plus,
   CheckCircle,
-  Clock,
-  XCircle,
-  CalendarOff,
+  Logs,
 } from "lucide-react";
 
 export const navItems = [
@@ -27,9 +23,9 @@ export const navItems = [
         label: "My Properties",
       },
       // {
-      //   path: "/properties/pending",
-      //   icon: Clock,
-      //   label: "Pending Properties",
+      //   path: "/dashboard/visit-logs",
+      //   icon: Logs,
+      //   label: "Visit Log",
       // },
       // {
       //   path: "/properties/rejected",
@@ -43,9 +39,11 @@ export const navItems = [
       // },
     ],
   },
-  { path: "/leads", icon: Users, label: "Leads" },
-  { path: "/billings", icon: CreditCard, label: "Billings" },
-  { path: "/activity", icon: Activity, label: "Activity Logs" },
-  { path: "/favorites", icon: Star, label: "Favorites" },
+  // { path: "/leads", icon: Users, label: "Leads" },
+
+  { path: "/dashboard/billings", icon: CreditCard, label: "Billings" },
+  { path: "/dashboard/visit-logs", icon: Logs, label: "Visit Log" },
+  // { path: "/activity", icon: Activity, label: "Activity Logs" },
+  { path: "/dashboard/favorites", icon: Star, label: "Favorites" },
   { path: "/dashboard/profile", icon: UserRound, label: "Profile" },
 ];

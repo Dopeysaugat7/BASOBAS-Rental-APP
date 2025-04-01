@@ -11,6 +11,7 @@ import {
   deleteImage,
   getPropertiesByHost,
   getPropertiesNearLocation,
+  getPropertyVisits,
 } from "../controllers/propertyController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import { uploadPropertyImages } from "../middlewares/fileupload.js";
@@ -32,5 +33,7 @@ router.delete("/:id", isAuthenticated, deleteProperty);
 router.put("/:id/images", isAuthenticated, uploadPropertyImages, uploadImages);
 router.put("/:id/primary-image", isAuthenticated, setPrimaryImage);
 router.delete("/:id/images/:imageId", isAuthenticated, deleteImage);
+
+router.get("/:propertyId/visits", isAuthenticated, getPropertyVisits);
 
 export default router;

@@ -7,6 +7,7 @@ import { errorMiddleware } from "./middlewares/error.js";
 import userRouter from "./routes/userRouter.js";
 import superAdminRouter from "./routes/superAdminRouter.js";
 import propertyRouter from "./routes/propertyRouter.js";
+import visitRouter from "./routes/visitRouter.js";
 import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 import path from "path";
 
@@ -33,6 +34,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/superadmin", superAdminRouter);
 app.use("/api/properties", propertyRouter);
+app.use("/api/visits", visitRouter);
 
 // removeUnverifiedAccounts();
 connectDB();

@@ -47,6 +47,36 @@ const userSchema = new mongoose.Schema({
       required: true,
     },
   ],
+  rentedProperties: [
+    {
+      property: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property",
+      },
+      startDate: {
+        type: Date,
+        required: true,
+      },
+      endDate: {
+        type: Date,
+        required: true,
+      },
+      status: {
+        type: String,
+        enum: ["active", "completed", "cancelled"],
+        default: "active",
+      },
+      paymentStatus: {
+        type: String,
+        enum: ["pending", "paid", "refunded"],
+        default: "pending",
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   accountVerified: {
     type: Boolean,
     default: false,

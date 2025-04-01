@@ -217,22 +217,22 @@ const propertySchema = new Schema({
   }, // Min rental duration
 
   // Admin Approval System
-  approvalStatus: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending",
-  },
-  approvedBy: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  approvedAt: {
-    type: Date,
-  },
-  rejectionReason: {
-    type: String,
-    maxlength: 500,
-  },
+  // approvalStatus: {
+  //   type: String,
+  //   enum: ["pending", "approved", "rejected"],
+  //   default: "pending",
+  // },
+  // approvedBy: {
+  //   type: Schema.Types.ObjectId,
+  //   ref: "User",
+  // },
+  // approvedAt: {
+  //   type: Date,
+  // },
+  // rejectionReason: {
+  //   type: String,
+  //   maxlength: 500,
+  // },
 
   // Property Expiry
   expiryDate: {

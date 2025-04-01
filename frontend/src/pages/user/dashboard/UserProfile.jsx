@@ -271,9 +271,9 @@ export const UserProfile = () => {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <form onSubmit={handleProfileSubmit(updateProfile)}>
-              <div className="flex sm:flex-row items-start gap-6 mb-8 dark:bg-[#0f172b] p-6 rounded-lg border-1">
-                <div className="flex flex-col items-center">
-                  <Avatar className="h-24 w-24 mb-4">
+              <div className="flex sm:flex-row sm:items-start flex-col gap-6 mb-8 bg-white dark:bg-[#0f172b] p-6 rounded-lg border-1">
+                <div className="flex sm:flex-col items-center justify-center gap-10 sm:gap-2">
+                  <Avatar className="h-24 w-24 sm:mb-4 mb-2">
                     <AvatarImage
                       src={
                         profilePicturePreview ||
@@ -314,7 +314,7 @@ export const UserProfile = () => {
                       </Label>
                       <Input
                         id="name"
-                        className="text-xl font-semibold mt-1"
+                        className="sm:text-sm sm:font-medium mt-1"
                         {...profileRegister("name", {
                           required: "Full name is required",
                         })}
@@ -345,7 +345,7 @@ export const UserProfile = () => {
                 </div>
               </div>
 
-              <Card className="border rounded-lg mb-6">
+              <Card className="border rounded-lg mb-6 shadow-none">
                 <CardHeader>
                   <CardTitle className="text-lg">
                     Personal Information
@@ -450,7 +450,7 @@ export const UserProfile = () => {
 
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-6">
-            <Card className="border rounded-lg">
+            <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">Account Verification</CardTitle>
               </CardHeader>
@@ -489,7 +489,7 @@ export const UserProfile = () => {
             </Card>
 
             {/* Password Change Form - Now Independent */}
-            <Card className="border rounded-lg">
+            <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">Change Password</CardTitle>
               </CardHeader>
@@ -567,7 +567,7 @@ export const UserProfile = () => {
               </form>
             </Card>
 
-            <Card className="border rounded-lg border-destructive">
+            <Card className="border-2 rounded-lg border-destructive shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg text-destructive">
                   Delete Account
@@ -593,7 +593,7 @@ export const UserProfile = () => {
 
           <TabsContent value="bookings" className="space-y-6">
             {/* Bookings content */}
-            <Card className="border rounded-lg">
+            <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">My Bookings</CardTitle>
               </CardHeader>
@@ -636,7 +636,7 @@ export const UserProfile = () => {
               </CardContent>
             </Card>
 
-            <Card className="border rounded-lg">
+            <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">My Reviews</CardTitle>
               </CardHeader>

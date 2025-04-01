@@ -62,6 +62,7 @@ const MyProperties = () => {
 
   const { data: properties, isLoading, isError } = useHostProperties(user._id);
 
+  console.log(user);
   const deleteSuccess = () => {
     queryClient.invalidateQueries(["myProperties"]);
     toast.success("Property deleted successfully");
@@ -91,10 +92,7 @@ const MyProperties = () => {
       properties?.data.filter((property) => {
         if (filter === "active")
           return property.isActive && !property.isExpired;
-        if (filter === "pending") return property.approvalStatus === "pending";
         if (filter === "expired") return property.isExpired;
-        if (filter === "rejected")
-          return property.approvalStatus === "rejected";
 
         return true;
       }) || []
@@ -111,7 +109,7 @@ const MyProperties = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="container mx-auto sm:px-4 py-6 max-w-7xl">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
@@ -145,28 +143,12 @@ const MyProperties = () => {
           Active
         </Button>
         <Button
-          variant={filter === "pending" ? "default" : "outline"}
-          onClick={() => setFilter("pending")}
-          className="whitespace-nowrap px-4 py-2 text-sm"
-        >
-          <Clock className="h-4 w-4 mr-1" />
-          Pending Approval
-        </Button>
-        <Button
           variant={filter === "expired" ? "default" : "outline"}
           onClick={() => setFilter("expired")}
           className="whitespace-nowrap px-4 py-2 text-sm"
         >
           <XCircle className="h-4 w-4 mr-1" />
           Expired
-        </Button>
-        <Button
-          variant={filter === "rejected" ? "default" : "outline"}
-          onClick={() => setFilter("rejected")}
-          className="whitespace-nowrap px-4 py-2 text-sm"
-        >
-          <CalendarOff className="h-4 w-4 mr-1" />
-          Rejected
         </Button>
       </div>
 
@@ -202,8 +184,6 @@ const MyProperties = () => {
             description={
               filter === "active"
                 ? "You don't have any active properties. Add a new property to get started."
-                : filter === "pending"
-                ? "You don't have any properties pending approval."
                 : "You don't have any expired properties."
             }
           />
@@ -236,20 +216,10 @@ const MyProperties = () => {
                   </Link>
                 </AspectRatio>
                 <Badge
-                  variant={
-                    property.isExpired
-                      ? "destructive"
-                      : property.approvalStatus === "pending"
-                      ? "secondary"
-                      : "default"
-                  }
+                  variant={property.isExpired ? "destructive" : "default"}
                   className="absolute top-2 left-2"
                 >
-                  {property.isExpired
-                    ? "Expired"
-                    : property.approvalStatus === "pending"
-                    ? "Pending"
-                    : "Active"}
+                  {property.isExpired ? "Expired" : "Active"}
                 </Badge>
                 <div className="absolute top-2 right-2">
                   <DropdownMenu>

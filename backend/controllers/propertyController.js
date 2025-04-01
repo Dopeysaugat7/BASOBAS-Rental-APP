@@ -6,6 +6,7 @@ import fs from "fs";
 import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import ErrorHandler from "../middlewares/error.js";
 import geocoder, { geocodePropertyAddress } from "../utils/geocoder.js";
+import { Visit } from "../models/visitModel.js";
 
 export const createProperty = catchAsyncError(async (req, res, next) => {
   // Parse nested objects if they're strings (from form-data)
@@ -191,32 +192,43 @@ export const extendPropertyExpiry = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// @desc    Get all properties with filtering (including admin filters)
+// @desc    Get all properties with filtering
 // @route   GET /api/properties
-// @access  Public
+// @access  Public/Private
 export const getAllProperties = catchAsyncError(async (req, res, next) => {
-  // Basic filtering
+  // 1) Basic filtering
   const queryObj = { ...req.query };
-  const excludedFields = ["page", "sort", "limit", "fields", "search"];
+  const excludedFields = [
+    "page",
+    "sort",
+    "limit",
+    "fields",
+    "search",
+    "near",
+    "myProperties",
+  ];
   excludedFields.forEach((el) => delete queryObj[el]);
 
-  // Only show approved properties to non-admins
-  if (!req.user?.isAdmin) {
-    queryObj.approvalStatus = "approved";
-    queryObj.isExpired = false;
-    queryObj.isActive = true;
+  // 2) Apply default filters for everyone
+  queryObj.isExpired = false;
+  queryObj.isActive = true;
+
+  // 3) Special case: If user wants to see their own properties
+  if (req.query.myProperties && req.user) {
+    queryObj.host = req.user._id;
+    delete queryObj.isAvailable; // Show all their properties regardless of availability
+  }
+  // Normal case: Show available properties to everyone
+  else {
+    queryObj.isAvailable = true;
   }
 
-  // Advanced filtering for ranges (price, area etc.)
+  // 4) Advanced filtering for ranges
   let queryStr = JSON.stringify(queryObj);
   queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+  let query = Property.find(JSON.parse(queryStr));
 
-  let query = Property.find(JSON.parse(queryStr)).populate(
-    "host",
-    "name email phone profilePicture"
-  );
-
-  // Search functionality
+  // 5) Search functionality
   if (req.query.search) {
     const searchRegex = new RegExp(req.query.search, "i");
     query = query.or([
@@ -228,15 +240,39 @@ export const getAllProperties = catchAsyncError(async (req, res, next) => {
     ]);
   }
 
-  // Sorting
+  // 6) Location-based search
+  if (req.query.near) {
+    const [lat, lng, radius] = req.query.near.split(",");
+    if (!lat || !lng || !radius) {
+      return next(
+        new AppError("Please provide lat,lng,radius in near parameter", 400)
+      );
+    }
+
+    query = query.where("address.location").near({
+      center: [parseFloat(lng), parseFloat(lat)],
+      spherical: true,
+      maxDistance: parseFloat(radius) * 1000,
+    });
+  }
+
+  // 7) Populate host information
+  query = query.populate("host", "name email phone profilePicture");
+
+  // 8) Sorting
   if (req.query.sort) {
     const sortBy = req.query.sort.split(",").join(" ");
     query = query.sort(sortBy);
   } else {
-    query = query.sort("-createdAt"); // Default: newest first
+    // Default sorting: newest first, but prioritize user's own properties
+    if (req.query.myProperties && req.user) {
+      query = query.sort("-createdAt");
+    } else {
+      query = query.sort("-createdAt");
+    }
   }
 
-  // Field limiting
+  // 9) Field limiting
   if (req.query.fields) {
     const fields = req.query.fields.split(",").join(" ");
     query = query.select(fields);
@@ -244,16 +280,16 @@ export const getAllProperties = catchAsyncError(async (req, res, next) => {
     query = query.select("-__v");
   }
 
-  // Pagination
+  // 10) Pagination
   const page = req.query.page * 1 || 1;
   const limit = req.query.limit * 1 || 10;
   const skip = (page - 1) * limit;
 
   query = query.skip(skip).limit(limit);
 
-  // Execute query
+  // 11) Execute query
   const properties = await query;
-  const total = await Property.countDocuments(JSON.parse(queryStr));
+  const total = await Property.countDocuments(query.getFilter());
 
   res.status(200).json({
     success: true,
@@ -261,22 +297,7 @@ export const getAllProperties = catchAsyncError(async (req, res, next) => {
     total,
     page,
     pages: Math.ceil(total / limit),
-    results: properties,
-  });
-});
-
-// @desc    Get pending properties (Admin only)
-// @route   GET /api/properties/pending
-// @access  Private/Admin
-export const getPendingProperties = catchAsyncError(async (req, res, next) => {
-  const properties = await Property.find({ approvalStatus: "pending" })
-    .populate("host", "name email phone profilePicture")
-    .sort("-createdAt");
-
-  res.status(200).json({
-    success: true,
-    count: properties.length,
-    results: properties,
+    data: properties,
   });
 });
 
@@ -412,6 +433,7 @@ export const deleteProperty = catchAsyncError(async (req, res, next) => {
     });
   }
 
+  console.log("property.host:", property);
   // Remove property reference from user
   await User.findByIdAndUpdate(property.host, {
     $pull: { properties: property._id },
@@ -541,8 +563,10 @@ export const getPropertiesNearLocation = catchAsyncError(
 // @access  Public
 export const getProperty = catchAsyncError(async (req, res, next) => {
   console.log(req.params.id);
-  const property = await Property.findById(req.params.id);
-  // .populate("host", "name email phone profilePicture")
+  const property = await Property.findById(req.params.id).populate(
+    "host",
+    "name email phone profilePicture"
+  );
   // .populate({
   //   path: "reviews",
   //   populate: {
@@ -724,3 +748,28 @@ export const getPropertiesByHost = catchAsyncError(async (req, res, next) => {
     data: properties,
   });
 });
+
+export const getPropertyVisits = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    // Verify the requesting user is the host
+    if (property.host.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const visits = await Visit.find({ property: req.params.propertyId })
+      .sort({
+        visitDate: -1,
+      })
+      .populate("property", "title address");
+
+    res.json(visits);
+  } catch (error) {
+    console.error("Error fetching visits:", error);
+    res.status(500).json({ error: "Failed to fetch visits" });
+  }
+};

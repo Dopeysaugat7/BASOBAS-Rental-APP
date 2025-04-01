@@ -26,7 +26,7 @@ export default function AdminNav() {
   return (
     <>
       {/* Desktop Navigation */}
-      <div className="hidden lg:sticky lg:inset-y-0 lg:top-16 lg:left-0 lg:mt-10 lg:mb-10 lg:block lg:w-64 lg:h-[75vh] lg:border-1 rounded-xl dark:bg-[#0f172b] lg:overflow-y-auto shadow-md">
+      <div className="hidden lg:sticky lg:inset-y-0 lg:top-16 lg:left-0 lg:mt-10 lg:mb-10 lg:block lg:w-64 lg:h-[75vh] lg:border-1 rounded-xl bg-white dark:bg-[#0f172b] lg:overflow-y-auto">
         <div className="flex h-full flex-col gap-4 px-4 py-6">
           <h2 className="px-4 text-lg font-semibold hidden lg:block">
             Navigation
@@ -104,7 +104,7 @@ export default function AdminNav() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="lg:hidden sticky top-18 left-0 mt-10 self-center w-[100%] bg-background border rounded-lg shadow-lg z-10">
+      <div className="lg:hidden sticky top-18 left-0 mt-10 self-center w-[100%] bg-white dark:bg-[#0f172b] border rounded-lg shadow-md z-20">
         <div className="flex items-center justify-between px-2 py-1">
           {/* Visible links */}
           {navItems.slice(0, 4).map((item) =>

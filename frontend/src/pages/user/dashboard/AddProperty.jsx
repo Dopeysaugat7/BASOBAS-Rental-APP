@@ -373,10 +373,10 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-full">
-      <Card className="border-1 shadow-none px-2">
+    <div className="containerpx-0 py-6 max-w-full">
+      <Card className="border-1 shadow-none sm:px-2 ">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl font-bold pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold pb-4">
             <Home className="h-6 w-6 text-primary" />
             <span>List Your Property</span>
           </CardTitle>
