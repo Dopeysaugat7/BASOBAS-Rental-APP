@@ -31,6 +31,7 @@ import { Favorites } from "./pages/user/dashboard/Favorites";
 import Dashboard from "./pages/user/dashboard/Dashboard";
 import VisitsDashboard from "./pages/user/dashboard/VisitLog";
 import SearchProperty from "./pages/user/SearchProperty";
+import PropertyList from "./pages/user/PropertyList";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           </Route>
           <Route path="/:id" element={<PropertyDetails />} />
           <Route path="/search" element={<SearchProperty />} />
+          <Route path="/properties" element={<PropertyList />} />
         </Route>
 
         <Route path="/auth" element={<UserAuth />} />
