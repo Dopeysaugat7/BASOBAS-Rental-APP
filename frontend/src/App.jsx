@@ -30,6 +30,7 @@ import Billing from "./pages/user/dashboard/Billing";
 import { Favorites } from "./pages/user/dashboard/Favorites";
 import Dashboard from "./pages/user/dashboard/Dashboard";
 import VisitsDashboard from "./pages/user/dashboard/VisitLog";
+import SearchProperty from "./pages/user/SearchProperty";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
             </Route>
           </Route>
           <Route path="/:id" element={<PropertyDetails />} />
+          <Route path="/search" element={<SearchProperty />} />
         </Route>
 
         <Route path="/auth" element={<UserAuth />} />
