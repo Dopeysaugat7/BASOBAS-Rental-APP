@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 const UserSignup = () => {
   const { setIsAuthenticated, setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigateTo = useNavigate();
   const {
     register,
@@ -53,21 +54,28 @@ const UserSignup = () => {
       });
   };
   return (
-    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-4xl font-bold text-gray-900 dark:text-white">
-            Register
+    <div className="flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-background dark:bg-background">
+      <div className="w-full max-w-md mx-auto space-y-6 sm:space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground dark:text-foreground">
+            Create an account
           </h2>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground dark:text-muted-foreground">
+            Get started with just a few details
+          </p>
         </div>
+
         <form
-          className="mt-8 space-y-6"
+          className="mt-6 space-y-4 sm:space-y-6"
           onSubmit={handleSubmit(handleRegister)}
         >
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Name
+              <label
+                htmlFor="name"
+                className="block text-sm sm:text-base font-medium text-foreground dark:text-foreground mb-1"
+              >
+                Full Name
               </label>
               <input
                 id="name"
@@ -75,14 +83,18 @@ const UserSignup = () => {
                 type="text"
                 autoComplete="name"
                 required
-                className="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                placeholder="Name"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                placeholder="John Doe"
                 {...register("name")}
               />
             </div>
+
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm sm:text-base font-medium text-foreground dark:text-foreground mb-1"
+              >
+                Email Address
               </label>
               <input
                 id="email"
@@ -90,82 +102,97 @@ const UserSignup = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                placeholder="Email"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                placeholder="you@example.com"
                 {...register("email")}
               />
             </div>
+
             <div>
-              <label htmlFor="phone" className="sr-only">
-                Phone
+              <label
+                htmlFor="phone"
+                className="block text-sm sm:text-base font-medium text-foreground dark:text-foreground mb-1"
+              >
+                Phone Number
               </label>
-              <div className="flex rounded-lg shadow-sm">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 sm:text-md">
+              <div className="flex rounded-lg">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-input bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground text-sm sm:text-base">
                   +977
                 </span>
                 <input
                   id="phone"
                   name="phone"
-                  type="number"
-                  autoComplete="phone"
+                  type="tel"
+                  autoComplete="tel"
                   required
-                  className="appearance-none rounded-none rounded-r-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                  placeholder="Phone"
+                  className="flex-1 min-w-0 block w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-none rounded-r-lg border border-l-0 border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                  placeholder="98XXXXXXXX"
                   {...register("phone")}
                 />
               </div>
             </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm sm:text-base font-medium text-foreground dark:text-foreground mb-1"
+              >
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
-                className="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                placeholder="Password"
-                {...register("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-500 dark:text-gray-400"
-              >
-                {showPassword ? <EyeClosedIcon /> : <Eye />}
-              </button>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent pr-10"
+                  placeholder="••••••••"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className="verification-method">
-              <p className="text-md text-gray-900 dark:text-gray-300">
-                Select Verification Method
+            <div className="pt-1 sm:pt-2">
+              <p className="text-sm sm:text-base font-medium text-foreground dark:text-foreground mb-2">
+                Verification Method
               </p>
-              <div className="mt-2 space-y-2 flex gap-10">
-                <label className="flex items-center">
+              <div className="flex gap-4 sm:gap-6">
+                <label className="flex items-center space-x-2">
                   <input
                     type="radio"
                     name="verificationMethod"
-                    value={"email"}
+                    value="email"
                     {...register("verificationMethod")}
                     required
-                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-4 w-4 text-primary dark:text-primary focus:ring-primary dark:focus:ring-primary border-gray-300 dark:border-input"
                   />
-                  <span className="ml-3 text-md text-gray-900 dark:text-gray-300">
+                  <span className="text-sm sm:text-base text-foreground dark:text-foreground">
                     Email
                   </span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center space-x-2">
                   <input
                     type="radio"
                     name="verificationMethod"
-                    value={"phone"}
+                    value="phone"
                     {...register("verificationMethod")}
                     required
-                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-4 w-4 text-primary dark:text-primary focus:ring-primary dark:focus:ring-primary border-gray-300 dark:border-input"
                   />
-                  <span className="ml-3 text-md text-gray-900 dark:text-gray-300">
+                  <span className="text-sm sm:text-base text-foreground dark:text-foreground">
                     Phone
                   </span>
                 </label>
@@ -176,9 +203,38 @@ const UserSignup = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-md font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className={`w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent text-sm sm:text-base font-medium rounded-lg text-primary-foreground dark:text-primary-foreground bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary ${
+                isLoading ? "opacity-75 cursor-not-allowed" : ""
+              }`}
             >
-              Register
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </button>
           </div>
         </form>

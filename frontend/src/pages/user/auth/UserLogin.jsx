@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { Eye, EyeClosedIcon, EyeOffIcon } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 const UserLogin = () => {
   const { setIsAuthenticated, setUser } = useAuth();
@@ -15,7 +15,8 @@ const UserLogin = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Retrieve stored credentials if available
@@ -36,6 +37,7 @@ const UserLogin = () => {
   } = useForm();
 
   const handleLogin = async (data) => {
+    setIsLoading(true);
     try {
       const res = await axios.post(
         "http://localhost:5000/api/v1/user/login",
@@ -61,38 +63,51 @@ const UserLogin = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-4xl font-bold text-gray-900 dark:text-white">
-            Login
+    <div className="flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground dark:text-foreground">
+            Welcome back
           </h2>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground dark:text-muted-foreground">
+            Sign in to your account to continue
+          </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(handleLogin)}>
+
+        <form className="mt-6 space-y-6" onSubmit={handleSubmit(handleLogin)}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-foreground dark:text-foreground mb-1"
+              >
                 Email address
               </label>
               <input
-                id="email-address"
+                id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                placeholder="Email address"
+                className="w-full px-4 py-3 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent transition-colors"
+                placeholder="you@example.com"
                 {...register("email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-foreground dark:text-foreground mb-1"
+              >
                 Password
               </label>
               <div className="relative">
@@ -102,8 +117,8 @@ const UserLogin = () => {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-md"
-                  placeholder="Password"
+                  className="w-full px-4 py-3 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-input bg-card dark:bg-card text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent transition-colors pr-10"
+                  placeholder="••••••••"
                   {...register("password")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,9 +126,14 @@ const UserLogin = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 dark:text-gray-400"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeClosedIcon /> : <Eye />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -127,32 +147,59 @@ const UserLogin = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={() => setRememberMe(!rememberMe)}
-                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                className="h-4 w-4 text-primary dark:text-primary focus:ring-primary dark:focus:ring-primary border-gray-300 dark:border-input rounded"
               />
               <label
                 htmlFor="remember-me"
-                className="ml-3 block text-md text-gray-900 dark:text-gray-300"
+                className="ml-2 text-sm text-foreground dark:text-foreground"
               >
                 Remember me
               </label>
             </div>
 
-            <div className="text-md">
-              <Link
-                to="/password/forgot"
-                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                Forgot your password?
-              </Link>
-            </div>
+            <Link
+              to="/password/forgot"
+              className="text-sm font-medium text-primary dark:text-primary hover:text-primary/80 dark:hover:text-primary/80 transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-md font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className={`w-full flex justify-center py-3 px-4 text-sm sm:text-base border border-transparent rounded-lg font-medium text-primary-foreground dark:text-primary-foreground bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary transition-colors ${
+                isLoading ? "opacity-75 cursor-not-allowed" : ""
+              }`}
             >
-              Login
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Signing in...
+                </span>
+              ) : (
+                "Sign in"
+              )}
             </button>
           </div>
         </form>

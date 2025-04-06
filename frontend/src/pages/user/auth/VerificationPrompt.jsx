@@ -40,13 +40,13 @@ const VerificationPrompt = () => {
   };
 
   return (
-    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900 min-h-screen">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
+    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8 bg-background dark:bg-background">
+      <div className="w-full max-w-md mx-auto space-y-6 p-6 sm:p-8 rounded-xl bg-card dark:bg-card shadow-lg border border-border dark:border-border">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground dark:text-foreground">
             Verify Your Account
           </h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground dark:text-muted-foreground">
             We recommend verifying your account to access all features.
           </p>
         </div>
@@ -54,27 +54,27 @@ const VerificationPrompt = () => {
         <div className="mt-6 space-y-4">
           <button
             onClick={() => handleVerifyNow("email")}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-md font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-lg text-sm sm:text-base font-medium text-primary-foreground dark:text-primary-foreground bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary transition-colors"
           >
-            Verify via Email Now
+            Verify via Email
           </button>
 
           <button
             onClick={() => handleVerifyNow("phone")}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-md font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-lg text-sm sm:text-base font-medium text-primary-foreground dark:text-primary-foreground bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary transition-colors"
           >
-            Verify via Phone Now
+            Verify via Phone
           </button>
 
           <button
             onClick={handleSkipForNow}
-            className="w-full flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-md font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full flex justify-center py-2 sm:py-3 px-4 border border-gray-300 dark:border-input rounded-lg text-sm sm:text-base font-medium text-foreground dark:text-foreground bg-card dark:bg-card hover:bg-accent dark:hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary transition-colors"
           >
             Skip for Now
           </button>
         </div>
 
-        <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-4 text-center text-sm text-muted-foreground dark:text-muted-foreground">
           <p>You can always verify later from your account settings.</p>
         </div>
       </div>

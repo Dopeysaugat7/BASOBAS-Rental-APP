@@ -95,7 +95,7 @@ export const Navbar = () => {
               </Button>
 
               {/* User Dropdown */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"

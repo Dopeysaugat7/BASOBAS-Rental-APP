@@ -26,29 +26,32 @@ const UserAuth = () => {
         </div>
 
         {/* Auth Form Section */}
-        <div className="w-full md:w-1/2 p-8 flex flex-col justify-center dark:bg-gray-900 ml-3 rounded-r-md">
-          <div className="flex justify-center mb-8 items-center">
-            <button
-              className={`px-4 py-2 mx-2 text-lg font-medium ${
-                isLogin
-                  ? "text-indigo-600 border-b-2 border-indigo-600"
-                  : "text-white hover:text-gray-700"
-              } transition duration-300 focus:outline-none`}
-              onClick={() => setIsLogin(true)}
-            >
-              Login
-            </button>
-            <button
-              className={`px-4 py-2 mx-2 text-lg font-medium ${
-                !isLogin
-                  ? "text-indigo-600 border-b-2 border-indigo-600"
-                  : "text-white hover:text-gray-700"
-              } transition duration-300 focus:outline-none`}
-              onClick={() => setIsLogin(false)}
-            >
-              Register
-            </button>
+        <div className="w-full md:w-1/2 p-2 md:p-8 flex flex-col justify-center">
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex bg-muted p-1 rounded-lg">
+              <button
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isLogin
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-foreground hover:bg-accent"
+                }`}
+                onClick={() => setIsLogin(true)}
+              >
+                Login
+              </button>
+              <button
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                  !isLogin
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-foreground hover:bg-accent"
+                }`}
+                onClick={() => setIsLogin(false)}
+              >
+                Register
+              </button>
+            </div>
           </div>
+
           {isLogin ? <UserLogin /> : <UserSignup />}
         </div>
       </div>
