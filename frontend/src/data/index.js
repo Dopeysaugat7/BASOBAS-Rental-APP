@@ -46,4 +46,10 @@ export const navItems = [
   // { path: "/activity", icon: Activity, label: "Activity Logs" },
   { path: "/dashboard/favorites", icon: Star, label: "Favorites" },
   { path: "/dashboard/profile", icon: UserRound, label: "Profile" },
+  {
+    path: "/dashboard/add-property",
+    icon: Plus,
+    label: "List your property",
+    variant: "ghost",
+  },
 ];

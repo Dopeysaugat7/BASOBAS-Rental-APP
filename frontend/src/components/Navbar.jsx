@@ -12,9 +12,10 @@ import {
   LogOut,
   Sun,
   Moon,
+  Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,18 +23,23 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion"; // Import animation components
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/hooks/ThemeProvider";
+import { navItems } from "@/data";
+import { cn } from "@/lib/utils";
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,6 +48,14 @@ export const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setIsMobileMenuOpen(false);
+    }
+  };
 
   return (
     <header
@@ -95,43 +109,63 @@ export const Navbar = () => {
               </Button>
 
               {/* User Dropdown */}
-              <DropdownMenu modal={false}>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative h-8 w-8 rounded-full border border-muted hover:bg-secondary"
+                    size="icon"
+                    className="relative h-9 w-9 rounded-full border hover:bg-secondary"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.profilePicture} alt="User" />
-                      <AvatarFallback className="bg-muted text-muted-foreground">
-                        <UserCircle className="h-8 w-8" />
+                      <AvatarImage
+                        src={user?.profilePicture}
+                        alt={user?.name || "User"}
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/50">
+                        {user?.name?.charAt(0)?.toUpperCase() || (
+                          <UserCircle className="h-5 w-5" />
+                        )}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-56 mt-4"
+                  className="w-56 mt-2 p-2 rounded-xl shadow-lg"
                   align="end"
                   forceMount
                 >
+                  <div className="px-2 py-1.5 text-sm font-medium truncate">
+                    {user?.name || "Account"}
+                  </div>
+                  <div className="px-2 text-xs text-muted-foreground truncate">
+                    {user?.email}
+                  </div>
+                  <DropdownMenuSeparator className="my-1" />
+
                   <Link to="/dashboard/profile">
-                    <DropdownMenuItem className="cursor-pointer gap-2">
+                    <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg px-2 py-2">
                       <UserCircle className="h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                   </Link>
                   <Link to="/dashboard">
-                    <DropdownMenuItem className="cursor-pointer gap-2">
+                    <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg px-2 py-2">
                       <LayoutDashboard className="h-4 w-4" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
+                  <Link to="/dashboard/settings">
+                    <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg px-2 py-2">
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <DropdownMenuSeparator className="my-1" />
+
                   <DropdownMenuItem
-                    className="cursor-pointer gap-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleTheme();
-                    }}
+                    className="cursor-pointer gap-2 rounded-lg px-2 py-2"
+                    onClick={toggleTheme}
                   >
                     {theme === "dark" ? (
                       <>
@@ -145,9 +179,15 @@ export const Navbar = () => {
                       </>
                     )}
                   </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="my-1" />
+
                   <DropdownMenuItem
-                    className="cursor-pointer text-destructive gap-2"
-                    onClick={() => logout()}
+                    className="cursor-pointer text-destructive gap-2 rounded-lg px-2 py-2"
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Log out</span>
@@ -159,13 +199,12 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-2">
-            {/* <Button variant="ghost" size="icon" className="md:hidden">
-              <Search className="h-5 w-5" />
-            </Button> */}
             <Button
               variant="ghost"
               size="icon"
+              className="md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -176,7 +215,7 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu with Animation */}
+        {/* Enhanced Mobile Menu with Modern Design */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -191,33 +230,20 @@ export const Navbar = () => {
                 animate={{ y: 0 }}
                 exit={{ y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="pb-4"
+                className="pb-4 pt-2"
               >
-                <div className="relative mt-2">
+                <form onSubmit={handleSearch} className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search destinations..."
-                    className="pl-10 rounded-full border-none bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary"
+                    className="pl-10 rounded-full bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  {/* <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden absolute right-0 top-4/8 -translate-y-1/2 bg-gray-900 w-20 rounded-full"
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button> */}
-                </div>
-                <nav className="mt-4 space-y-2">
-                  {[
-                    { path: "/", label: "Home", icon: Home },
-                    { path: "/favorites", label: "Favorites", icon: Heart },
-                    {
-                      path: "/messages",
-                      label: "Messages",
-                      icon: MessageSquare,
-                    },
-                    { path: "/host", label: "List your property", icon: House },
-                  ].map((item, index) => (
+                </form>
+
+                <nav className="space-y-1">
+                  {navItems.map((item, index) => (
                     <motion.div
                       key={item.path}
                       initial={{ opacity: 0, x: -20 }}
@@ -228,21 +254,93 @@ export const Navbar = () => {
                         variant={
                           location.pathname === item.path
                             ? "secondary"
-                            : "ghost"
+                            : item.variant || "ghost"
                         }
-                        className="w-full justify-start"
+                        size="lg"
+                        className={cn(
+                          "w-full justify-start rounded-lg",
+                          item.variant === "ghost" &&
+                            "bg-primary text-white hover:bg-primary/90 dark:bg-accent"
+                        )}
                         asChild
                       >
                         <Link
                           to={item.path}
                           onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center gap-3"
                         >
-                          {<item.icon className="mr-2 h-4 w-4" />}
+                          <item.icon className="h-5 w-5" />
                           {item.label}
                         </Link>
                       </Button>
                     </motion.div>
                   ))}
+
+                  {/* Modern Profile Section with Distinct Background */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (navItems.length + 1) * 0.05 }}
+                    className="pt-2"
+                  >
+                    <div className="bg-gradient-to-br from-secondary/20 to-muted/20 p-4 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-11 w-11 border-2 border-background">
+                          <AvatarImage
+                            src={user?.profilePicture}
+                            alt={user?.name || "User"}
+                          />
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/50">
+                            {user?.name?.charAt(0)?.toUpperCase() || (
+                              <UserCircle className="h-5 w-5" />
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {user?.name || "Account"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {user?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Action Buttons with Modern Style */}
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 rounded-lg"
+                        onClick={toggleTheme}
+                      >
+                        {theme === "dark" ? (
+                          <>
+                            <Sun className="h-4 w-4" />
+                            Light
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="h-4 w-4" />
+                            Dark
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 rounded-lg text-destructive hover:text-destructive"
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
+                  </motion.div>
                 </nav>
               </motion.div>
             </motion.div>
