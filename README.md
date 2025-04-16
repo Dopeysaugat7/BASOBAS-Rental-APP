@@ -18,9 +18,7 @@ Basobas is a full-featured house rental platform inspired by Airbnb. It provides
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB
 - **Authentication:** JWT
-- **Payment Integration:** Stripe
-- **Cloud Storage:** Firebase (or AWS S3)
-- **Hosting:** Vercel / Netlify (Frontend), Render / DigitalOcean (Backend)
+- **Payment Integration:** E-Sewa
 
 ## Installation
 
@@ -54,8 +52,8 @@ Basobas is a full-featured house rental platform inspired by Airbnb. It provides
 
 5. Run the development servers:
    ```sh
-   cd client && npm start
-   cd ../server && npm run dev
+   cd frontend && npm run dev
+   cd ../backend && npm run dev
    ```
 
 ## Contributing
@@ -67,10 +65,6 @@ Contributions are welcome! To contribute:
 3. Commit your changes: `git commit -m "Add new feature"`
 4. Push to the branch: `git push origin feature-branch`
 5. Open a Pull Request.
-
-## License
-
-This project is licensed under the MIT License. Feel free to use and modify it.
 
 ## Contact
 
