@@ -190,151 +190,154 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
     transition={{ duration: 1 }}
     className="relative h-[70vh] md:h-[80vh] w-[92vw] mx-auto top-5"
   >
-    {/* Background image and gradient */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10 rounded-lg" />
+    {/* Background image with gradient overlay */}
+    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/80 z-10 rounded-lg" />
     <motion.img
       initial={{ scale: 1.01 }}
       animate={{ scale: 1 }}
       transition={{ duration: 1.5 }}
       className="w-full h-full object-cover rounded-lg"
-      src="https://images-ext-1.discordapp.net/external/QuyV5f18DHNduNAh88p0FbH_br1vTu5boKeDKVsHo64/%3Fq%3D80%26w%3D2070%26auto%3Dformat%26fit%3Dcrop%26ixlib%3Drb-4.0.3%26ixid%3DM3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%253D%253D/https/images.unsplash.com/photo-1670922867539-98a8bb1f65b5?format=webp&width=1862&height=1241"
-      alt="Luxury rental property"
+      src="https://images.unsplash.com/photo-1670922867539-98a8bb1f65b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      alt="Luxury property"
       loading="eager"
     />
 
     {/* Content */}
-    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 sm:px-6 text-center">
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
         className="max-w-4xl space-y-4 sm:space-y-6"
       >
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-          Find Your <span className="text-primary">Perfect</span> Property
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight">
+          Discover Your <span className="text-primary">Dream</span> Home
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-white/90 dark:text-white/80">
-          We provide a complete service for the sale, purchase or rental of real
-          estate.
+        <p className="text-lg md:text-xl text-white/90 font-light max-w-2xl mx-auto">
+          Find, buy, or rent the perfect property with our comprehensive real
+          estate services
         </p>
       </motion.div>
 
-      {/* Search Form with Background */}
+      {/* Search Form */}
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.6 }}
-        className="w-full max-w-4xl mt-6 md:mt-8 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-xl"
+        className="w-full max-w-4xl mt-8 md:mt-12 bg-white/90 backdrop-blur-sm dark:bg-gray-900 rounded-xl p-6 shadow-2xl"
       >
         <Tabs defaultValue="rent" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-1 h-10 md:h-12">
+          <TabsList className="grid grid-cols-2 w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-1 h-12">
             <TabsTrigger
               value="rent"
-              className="font-medium text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white rounded-md h-full transition-all"
+              className="font-medium text-sm data-[state=active]:bg-primary data-[state=active]:text-white rounded-md transition-all"
             >
-              RENT
+              Find a Property
             </TabsTrigger>
             <TabsTrigger
               value="list"
-              className="font-medium text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white rounded-md h-full transition-all"
+              className="font-medium text-sm data-[state=active]:bg-primary data-[state=active]:text-white rounded-md transition-all"
             >
-              LIST YOUR PROPERTY
+              List Your Property
             </TabsTrigger>
           </TabsList>
 
           {/* Rent Tab Content */}
-          <TabsContent value="rent" className="mt-4">
+          <TabsContent value="rent" className="mt-6">
             <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Location */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Location
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                    <select
-                      className="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Select
                       value={searchParams.location}
-                      onChange={(e) =>
-                        setSearchParams({
-                          ...searchParams,
-                          location: e.target.value,
-                        })
+                      onValueChange={(value) =>
+                        setSearchParams({ ...searchParams, location: value })
                       }
                     >
-                      <option value="">Select Your City</option>
-                      <option value="Kathmandu">Kathmandu</option>
-                      <option value="Pokhara">Pokhara</option>
-                      <option value="Chitwan">Chitwan</option>
-                      <option value="Lalitpur">Lalitpur</option>
-                    </select>
+                      <SelectTrigger className="w-full pl-10 border border-gray-300 dark:border-gray-600 ">
+                        <SelectValue placeholder="Select city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Kathmandu">Kathmandu</SelectItem>
+                        <SelectItem value="Pokhara">Pokhara</SelectItem>
+                        <SelectItem value="Chitwan">Chitwan</SelectItem>
+                        <SelectItem value="Lalitpur">Lalitpur</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 {/* Property Type */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Property Type
                   </label>
-                  <div className="relative">
-                    <HomeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                    <select
-                      className="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  <div className="relative ">
+                    <HomeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Select
                       value={searchParams.propertyType}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         setSearchParams({
                           ...searchParams,
-                          propertyType: e.target.value,
+                          propertyType: value,
                         })
                       }
                     >
-                      <option value="">Choose Property Type</option>
-                      <option value="House">House</option>
-                      <option value="Apartment">Apartment</option>
-                      <option value="Villa">Villa</option>
-                      <option value="Cabin">Cabin</option>
-                    </select>
+                      <SelectTrigger className="w-full pl-10 border border-gray-300 dark:border-gray-600">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="House">House</SelectItem>
+                        <SelectItem value="Apartment">Apartment</SelectItem>
+                        <SelectItem value="Villa">Villa</SelectItem>
+                        <SelectItem value="Cabin">Cabin</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 {/* Price Range */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Price Range
                   </label>
-                  <div className="relative">
-                    <select
-                      className="w-full pl-4 pr-4 py-2 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      value={searchParams.priceRange}
-                      onChange={(e) =>
-                        setSearchParams({
-                          ...searchParams,
-                          priceRange: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Choose Price Range</option>
-                      <option value="0-500">$0 - $500</option>
-                      <option value="500-1000">$500 - $1000</option>
-                      <option value="1000-2000">$1000 - $2000</option>
-                      <option value="2000+">$2000+</option>
-                    </select>
-                  </div>
+                  <Select
+                    value={searchParams.priceRange}
+                    onValueChange={(value) =>
+                      setSearchParams({ ...searchParams, priceRange: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full border border-gray-300 dark:border-gray-600">
+                      <SelectValue placeholder="Select range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0-500">₨. 0 - ₨.500</SelectItem>
+                      <SelectItem value="500-1000">₨.500 - ₨.1000</SelectItem>
+                      <SelectItem value="1000-2000">
+                        ₨.1000 - ₨. 2000
+                      </SelectItem>
+                      <SelectItem value="2000+">₨.2000+</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="pt-1 sm:pt-2"
+                className="pt-2"
               >
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-white dark:text-black dark:bg-white dark:hover:bg-gray-500 dark:hover:text-white rounded-md px-6 py-2 md:px-8 md:py-3 text-sm md:text-base transition-all duration-300 shadow-md hover:shadow-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-white dark:text-white dark:bg-primary dark:hover:bg-primary/90 rounded-lg px-6 py-3 text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg"
                 >
-                  <Search className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <Search className="h-5 w-5 mr-2" />
                   Search Properties
                 </Button>
               </motion.div>
@@ -342,21 +345,21 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
           </TabsContent>
 
           {/* List Your Property Tab Content */}
-          <TabsContent value="list" className="mt-4">
-            <div className="text-center p-4 md:p-6">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-2 md:mb-3">
+          <TabsContent value="list" className="mt-6">
+            <div className="text-center p-6 space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
                 Ready to list your property?
               </h3>
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-4 md:mb-6">
-                Join our network of property owners and reach thousands of
-                potential renters.
+              <p className="text-gray-600 dark:text-gray-400">
+                Join our network and reach thousands of potential buyers or
+                renters.
               </p>
               <Button
                 asChild
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-white dark:text-black dark:bg-white dark:hover:bg-gray-500 dark:hover:text-white rounded-full px-6 py-2 md:px-8 md:py-3 text-sm md:text-base transition-all duration-300 shadow-md hover:shadow-lg"
+                className="bg-primary hover:bg-primary/90 text-white dark:text-white dark:bg-primary dark:hover:bg-primary/90 rounded-lg px-6 py-3 text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg"
               >
-                <Link to="/dashboard/add-property">Get Started</Link>
+                <Link to="/dashboard/add-property">Get Started Now</Link>
               </Button>
             </div>
           </TabsContent>
@@ -371,7 +374,7 @@ const PropertyTypesSection = ({
   setSearchParams,
   searchParams,
 }) => (
-  <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
+  <section className="py-12 md:pt-16 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -462,7 +465,7 @@ const FeaturedRentalsSection = ({
   isFavorite,
   handleFavoriteToggle,
 }) => (
-  <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
+  <section className="py-12 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -580,7 +583,7 @@ const FeaturedRentalsSection = ({
                   <div className="w-full flex justify-between items-center">
                     <div>
                       <span className="font-bold text-base md:text-lg text-foreground">
-                        ${property.pricePerMonth}
+                        ₨. {property.pricePerMonth}
                       </span>
                       <span className="text-xs md:text-sm text-muted-foreground">
                         /month

@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Settings,
+  Plus,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -154,12 +155,12 @@ export const Navbar = () => {
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
-                  <Link to="/dashboard/settings">
+                  {/* <Link to="/dashboard/settings">
                     <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg px-2 py-2">
                       <Settings className="h-4 w-4" />
                       <span>Settings</span>
                     </DropdownMenuItem>
-                  </Link>
+                  </Link> */}
 
                   <DropdownMenuSeparator className="my-1" />
 
@@ -275,6 +276,28 @@ export const Navbar = () => {
                       </Button>
                     </motion.div>
                   ))}
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: navItems.length * 0.05 + 0.1 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="w-full justify-start rounded-lg bg-primary text-white hover:bg-primary/90 dark:bg-accent dark:hover:text-white"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      asChild
+                    >
+                      <Link
+                        to="/dashboard/add-property"
+                        className="flex items-center gap-3"
+                      >
+                        <Plus className="h-5 w-5" />
+                        List your property
+                      </Link>
+                    </Button>
+                  </motion.div>
 
                   {/* Modern Profile Section with Distinct Background */}
                   <motion.div

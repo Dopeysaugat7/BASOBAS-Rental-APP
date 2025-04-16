@@ -39,8 +39,8 @@ import {
 const Dashboard = () => {
   // Mock data - replace with actual API calls
   const userData = {
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
+    name: "Rohan Shrestha",
+    email: "rohan02shrestha@gmail.com",
     joinDate: "2023-05-15",
   };
 
