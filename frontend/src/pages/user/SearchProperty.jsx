@@ -129,12 +129,14 @@ export default function SearchProperty() {
   const { searchParams: initialParams } = location.state || {
     searchParams: { location: "", propertyType: "" },
   };
-
+  console.log(initialParams.priceRange.split("-").map((num) => parseInt(num)));
   // State for search and filter parameters
   const [searchParams, setSearchParams] = useState({
     location: initialParams.location || "",
     propertyType: initialParams.propertyType || "any",
-    priceRange: [0, 100000],
+    priceRange: initialParams.priceRange
+      .split("-")
+      .map((num) => parseInt(num)) || [0, 100000],
     bedrooms: "any",
     bathrooms: "any",
     furnishingStatus: "any",
@@ -853,7 +855,7 @@ export default function SearchProperty() {
         </AnimatePresence>
 
         {/* Main Content */}
-        <main className="max-w-[85rem] mx-auto px-4 sm:px-6 py-8">
+        <main className="lg:max-w-[85rem] mx-auto px-4 sm:px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Property Cards */}
             <div className="lg:col-span-2">
