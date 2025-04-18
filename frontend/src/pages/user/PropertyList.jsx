@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-vars */
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   Heart,
@@ -24,11 +21,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { motion } from "framer-motion"; // npm install framer-motion
+import { motion } from "framer-motion";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-// PropertyCard Component (Wider Version)
+// PropertyCard Component (Compact Version)
 function PropertyCards({
   id,
   image,
@@ -48,7 +45,7 @@ function PropertyCards({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="h-full min-w-[300px]" // Increased minimum width for wider cards
+      className="h-full w-full"
     >
       <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-gray-800/50 h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 py-0">
         <CardHeader className="p-0 relative">
@@ -56,7 +53,7 @@ function PropertyCards({
             <img
               src={image || "https://placehold.co/400x300"}
               alt={title}
-              className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
           </div>
@@ -84,9 +81,15 @@ function PropertyCards({
             {type}
           </Badge>
         </CardHeader>
-        <CardContent className="p-5 flex-1">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-lg line-clamp-1 text-foreground dark:text-white">
+        <CardContent className="p-4 flex-1">
+          {" "}
+          {/* Reduced padding */}
+          <div className="flex items-start justify-between mb-1">
+            {" "}
+            {/* Reduced margin */}
+            <h3 className="font-semibold text-base line-clamp-1 text-foreground dark:text-white">
+              {" "}
+              {/* Smaller font */}
               {title}
             </h3>
             <div className="flex items-center gap-1">
@@ -96,37 +99,46 @@ function PropertyCards({
               </span>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-3">
-            <MapPin className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+          <p className="text-xs text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-2">
+            {" "}
+            {/* Smaller text and margin */}
+            <MapPin className="h-3 w-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />{" "}
+            {/* Smaller icon */}
             {location}
           </p>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-1 mb-2">
+            {" "}
+            {/* Reduced gap and margin */}
             {amenities?.slice(0, 3).map((amenity, i) => (
               <span
                 key={i}
-                className="text-xs px-2 py-1 bg-muted dark:bg-muted/60 rounded-full text-muted-foreground dark:text-gray-300 transition-colors duration-300 hover:bg-primary/10 dark:hover:bg-primary/20"
+                className="text-[10px] px-1.5 py-0.5 bg-muted dark:bg-muted/60 rounded-full text-muted-foreground dark:text-gray-300 transition-colors duration-300 hover:bg-primary/10 dark:hover:bg-primary/20"
               >
                 {amenity}
               </span>
             ))}
           </div>
         </CardContent>
-        <CardFooter className="p-5 pt-0 border-t border-muted dark:border-gray-700">
+        <CardFooter className="p-4 pt-0 border-t border-muted dark:border-gray-700">
+          {" "}
+          {/* Reduced padding */}
           <div className="w-full flex justify-between items-center">
             <div>
-              <span className="font-bold text-lg text-foreground dark:text-white">
+              <span className="font-bold text-base text-foreground dark:text-white">
+                {" "}
+                {/* Smaller font */}
                 {currency} {price.toLocaleString()}
               </span>
-              <span className="text-sm text-muted-foreground dark:text-gray-400">
+              <span className="text-xs text-muted-foreground dark:text-gray-400">
                 {" "}
-                {unit}
+                {/* Smaller text */} {unit}
               </span>
             </div>
             <Button
               asChild
               variant="primary"
               size="sm"
-              className="bg-primary text-white hover:bg-primary/90 dark:text-black dark:bg-white  dark:hover:bg-gray-500 dark:hover:text-white transition-all duration-300"
+              className="bg-primary text-white hover:bg-primary/90 dark:text-black dark:bg-white dark:hover:bg-gray-500 dark:hover:text-white transition-all duration-300 text-xs px-3 h-8"
             >
               <Link to={`/${id}`}>View Details</Link>
             </Button>
@@ -157,7 +169,7 @@ function CategoryTabs({ onCategoryChange }) {
 
   return (
     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+      <div className="max-w-7xl lg:max-w-[90rem] mx-auto px-4 sm:px-6 py-4">
         <ScrollArea className="w-full">
           <Tabs
             value={activeCategory}
@@ -233,15 +245,17 @@ export default function PropertyList() {
     return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 w-screen">
       <CategoryTabs onCategoryChange={setCategoryFilter} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:max-w-[90rem]">
         {properties.length === 0 ? (
           <p className="text-center text-muted-foreground text-lg">
             No properties found in this category.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {" "}
+            {/* Reduced gap */}
             {properties.map((property) => (
               <PropertyCards
                 key={property._id}

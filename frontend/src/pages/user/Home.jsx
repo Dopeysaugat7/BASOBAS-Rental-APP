@@ -188,7 +188,7 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 1 }}
-    className="relative h-[70vh] md:h-[80vh] w-[92vw] mx-auto top-5"
+    className="relative h-[80vh] sm:h-[70vh] md:h-[80vh] w-[92vw] mx-auto top-5"
   >
     {/* Background image with gradient overlay */}
     <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/80 z-10 rounded-lg" />
@@ -197,7 +197,7 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
       animate={{ scale: 1 }}
       transition={{ duration: 1.5 }}
       className="w-full h-full object-cover rounded-lg"
-      src="https://images.unsplash.com/photo-1670922867539-98a8bb1f65b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      src="https://images.unsplash.com/photo-1734056087170-ebf632247006?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
       alt="Luxury property"
       loading="eager"
     />
@@ -211,11 +211,10 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
         className="max-w-4xl space-y-4 sm:space-y-6"
       >
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight">
-          Discover Your <span className="text-primary">Dream</span> Home
+          <span className="text-primary">नेपाली</span> Homes for Your Journey
         </h1>
         <p className="text-lg md:text-xl text-white/90 font-light max-w-2xl mx-auto">
-          Find, buy, or rent the perfect property with our comprehensive real
-          estate services
+          Discover authentic Nepali living spaces with modern comforts
         </p>
       </motion.div>
 
@@ -387,11 +386,11 @@ const PropertyTypesSection = ({
       className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4"
     >
       <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
-          Explore Property Types
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+          Explore <span className="text-primary">Nepali</span> Living Spaces
         </h2>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
-          Find the perfect property that matches your needs
+        <p className="text-gray-600 mt-2">
+          Traditional charm meets modern comfort
         </p>
       </div>
       {/* <Button
@@ -478,11 +477,11 @@ const FeaturedRentalsSection = ({
       className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4"
     >
       <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
-          Featured Properties
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+          Featured <span className="text-primary">Nepali</span> Rentals
         </h2>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
-          Curated selection of premium rentals
+        <p className="text-gray-600 mt-2">
+          Handpicked traditional and modern homes
         </p>
       </div>
       <Button
