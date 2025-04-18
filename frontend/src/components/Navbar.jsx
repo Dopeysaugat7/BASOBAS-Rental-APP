@@ -32,15 +32,97 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/hooks/ThemeProvider";
 import { navItems } from "@/data";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+const propertyTypes = [
+  "Any Type",
+  "House",
+  "Apartment",
+  "Villa",
+  "Cabin",
+  "Farmhouse",
+  "Studio",
+  "Penthouse",
+];
+
+export const NavbarSearch = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [propertyType, setPropertyType] = useState("Any Type");
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() || propertyType !== "Any Type") {
+      navigate("/search", {
+        state: {
+          searchParams: {
+            location: searchQuery,
+            propertyType: propertyType === "Any Type" ? "any" : propertyType,
+            priceRange: [0, 100000],
+          },
+        },
+      });
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch(e);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="flex items-center w-full max-w-xl">
+      <div className="relative flex-1 border-r-1">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="City or neighborhood..."
+          className="pl-10 rounded-r-none border-1 border-accent focus-visible:ring-1 focus-visible:ring-primary"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyPress}
+        />
+      </div>
+
+      <Select value={propertyType} onValueChange={setPropertyType}>
+        <SelectTrigger className="w-[180px] md:w-[160px] lg:w-[200px] rounded-none border-l-0 border-r-0 focus:ring-0 focus:ring-offset-0 border-1 border-accent">
+          <div className="flex items-center gap-2">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <SelectValue placeholder="Property type" />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          {propertyTypes.map((type) => (
+            <SelectItem key={type} value={type}>
+              {type}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Button
+        type="submit"
+        className="rounded-l-none px-4 bg-primary hover:bg-primary/90"
+      >
+        <Search className="h-4 w-4" />
+        <span className="sr-only">Search</span>
+      </Button>
+    </form>
+  );
+};
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,14 +132,6 @@ export const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setIsMobileMenuOpen(false);
-    }
-  };
-
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300  ${
@@ -66,8 +140,8 @@ export const Navbar = () => {
           : "bg-background"
       }`}
     >
-      <div className="shadow-sm w-screen lg:px-20 px-6">
-        <div className="flex items-center justify-between h-16">
+      <div className="shadow-sm w-screen lg:px-20 px-6 overflow-x-hidden">
+        <div className="flex items-center gap-6 justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <img
@@ -80,13 +154,7 @@ export const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6 ">
             {/* Search Bar */}
-            <div className="relative w-64 lg:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search destinations..."
-                className="pl-10 rounded-full dark:border-0 border-1 border-gray-300 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary"
-              />
-            </div>
+            <NavbarSearch />
 
             {/* Navigation Links */}
             <nav className="flex items-center gap-2 lg:gap-6">
@@ -233,15 +301,7 @@ export const Navbar = () => {
                 transition={{ duration: 0.2 }}
                 className="pb-4 pt-2"
               >
-                <form onSubmit={handleSearch} className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search destinations..."
-                    className="pl-10 rounded-full bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </form>
+                <NavbarSearch />
 
                 <nav className="space-y-1">
                   {navItems.map((item, index) => (

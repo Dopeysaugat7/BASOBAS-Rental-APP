@@ -129,14 +129,28 @@ export default function SearchProperty() {
   const { searchParams: initialParams } = location.state || {
     searchParams: { location: "", propertyType: "" },
   };
-  console.log(initialParams.priceRange.split("-").map((num) => parseInt(num)));
   // State for search and filter parameters
+
+  // Parse priceRange safely
+  let priceRange = [0, 100000];
+  if (typeof initialParams.priceRange === "string") {
+    const [min, max] = initialParams.priceRange
+      .split("-")
+      .map((num) => parseInt(num));
+    if (!isNaN(min) && !isNaN(max)) {
+      priceRange = [min, max];
+    }
+  } else if (
+    Array.isArray(initialParams.priceRange) &&
+    initialParams.priceRange.length === 2
+  ) {
+    priceRange = initialParams.priceRange;
+  }
+
   const [searchParams, setSearchParams] = useState({
     location: initialParams.location || "",
     propertyType: initialParams.propertyType || "any",
-    priceRange: initialParams.priceRange
-      .split("-")
-      .map((num) => parseInt(num)) || [0, 100000],
+    priceRange,
     bedrooms: "any",
     bathrooms: "any",
     furnishingStatus: "any",

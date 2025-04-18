@@ -11,6 +11,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Configure Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -22,6 +23,7 @@ const storage = multer.diskStorage({
   },
 });
 
+// Multer file filter
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpe?g|png|gif/;
   const mimetype = filetypes.test(file.mimetype);
@@ -33,6 +35,7 @@ const fileFilter = (req, file, cb) => {
   cb(new Error(`Invalid file type. Only ${filetypes} are allowed!`));
 };
 
+// Export upload middleware
 export const uploadProfilePicture = multer({
   storage,
   fileFilter,

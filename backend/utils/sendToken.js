@@ -1,5 +1,8 @@
 export const sendToken = async (user, statusCode, message, res) => {
+  // 1. Generate JWT token
   const token = await user.generateToken();
+
+  // 2. Send JWT token
   res
     .status(statusCode)
     .cookie("token", token, {

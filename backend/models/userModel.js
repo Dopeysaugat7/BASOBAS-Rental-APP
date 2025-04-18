@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
+// User Schema
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -97,6 +98,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Middleware to hash password
 userSchema.pre("save", async function (next) {
   this.updatedAt = Date.now();
 
@@ -114,10 +116,12 @@ userSchema.pre("save", async function (next) {
   }
 });
 
+// Method to compare passwords
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
+// Method to generate verification code
 userSchema.methods.generateVerificationCode = function () {
   function generateRandomFiveDigitNumber() {
     const firstDigit = Math.floor(Math.random() * 9) + 1;
@@ -134,6 +138,7 @@ userSchema.methods.generateVerificationCode = function () {
   return verificationCode;
 };
 
+// Method to generate JWT token
 userSchema.methods.generateToken = async function () {
   const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
@@ -141,6 +146,7 @@ userSchema.methods.generateToken = async function () {
   return token;
 };
 
+// Method to generate reset password token
 userSchema.methods.generateResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -154,4 +160,5 @@ userSchema.methods.generateResetPasswordToken = function () {
   return resetToken;
 };
 
+// Export User model
 export const User = mongoose.model("User", userSchema);

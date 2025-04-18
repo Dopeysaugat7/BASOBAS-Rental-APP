@@ -14,10 +14,13 @@ let client;
 
 export const register = catchAsyncError(async (req, res, next) => {
   try {
+    // 1. Validate input fields
     const { name, email, password, phone, verificationMethod } = req.body;
     if (!name || !email || !password || !phone || !verificationMethod) {
       return next(new ErrorHandler("All fields are required", 400));
     }
+
+    // 2. Check valid Nepali phone format
     function validatePhoneNumber(phone) {
       const phoneRegex = /^(?:\+977[-\s]?)?(9[78]\d{8})$/;
       return phoneRegex.test(phone);
@@ -27,6 +30,7 @@ export const register = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("Invalid phone number", 400));
     }
 
+    // 3. Prevent duplicate verified accounts
     const existingUser = await User.findOne({
       $or: [
         { email, accountVerified: true },
@@ -42,7 +46,7 @@ export const register = catchAsyncError(async (req, res, next) => {
         )
       );
     }
-
+    // 4. Limit unverified attempts to 2
     const registerationAttemptsByUser = await User.find({
       $or: [
         { email, accountVerified: false },
@@ -65,7 +69,7 @@ export const register = catchAsyncError(async (req, res, next) => {
       password,
       phone,
     };
-
+    // 5. Create user and send token (Skip verification here)
     const user = await User.create(userData);
 
     // const verificationCode = await user.generateVerificationCode();
@@ -88,10 +92,12 @@ export const register = catchAsyncError(async (req, res, next) => {
 export const sendVerification = catchAsyncError(async (req, res, next) => {
   const { email, phone, verificationMethod } = req.body;
 
+  // 1. Validate input
   if (!email || !phone || !verificationMethod) {
     return next(new ErrorHandler("All fields are required", 400));
   }
 
+  // 2. Find unverified user
   const user = await User.findOne({
     $or: [{ email }, { phone }],
     accountVerified: false,
@@ -101,9 +107,11 @@ export const sendVerification = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User not found or already verified", 404));
   }
 
+  // 3. Generate verification code
   const verificationCode = await user.generateVerificationCode();
   await user.save();
 
+  // 4. Send via email/SMS using `sendverificationCode`
   await sendverificationCode(
     verificationMethod,
     verificationCode,
@@ -211,6 +219,7 @@ async function sendverificationCode(
   }
 }
 
+// HTML structure for email verification code
 function generateEmailTemplate(verificationCode) {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
@@ -234,6 +243,8 @@ function generateEmailTemplate(verificationCode) {
 
 export const verifyOTP = catchAsyncError(async (req, res, next) => {
   const { email, otp, phone } = req.body;
+
+  // 1. Validate phone
   function validatePhoneNumber(phone) {
     const phoneRegex = /^(?:\+977[-\s]?)?(9[78]\d{8})$/;
     return phoneRegex.test(phone);
@@ -244,6 +255,7 @@ export const verifyOTP = catchAsyncError(async (req, res, next) => {
   }
 
   try {
+    // 2. Fetch latest unverified account
     const userAllEntries = await User.find({
       $or: [
         { email, accountVerified: false },
@@ -255,6 +267,7 @@ export const verifyOTP = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("User not found", 404));
     }
 
+    // 3. Clean old unverified duplicates
     let user;
 
     if (userAllEntries.length > 1) {
@@ -271,6 +284,8 @@ export const verifyOTP = catchAsyncError(async (req, res, next) => {
       user = userAllEntries[0];
     }
 
+    // 4. Validate OTP and expiration
+
     if (user.verificationCode !== Number(otp)) {
       return next(new ErrorHandler("Invalid OTP", 400));
     }
@@ -284,6 +299,7 @@ export const verifyOTP = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("OTP has expired", 400));
     }
 
+    // 5. Mark account verified and clear OTP
     user.accountVerified = true;
     user.verificationCode = null;
     user.verificationCodeExpire = null;
@@ -299,10 +315,12 @@ export const verifyOTP = catchAsyncError(async (req, res, next) => {
 export const login = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
 
+  // 1. Check email & password fields
   if (!email || !password) {
     return next(new ErrorHandler("Please enter email and password", 400));
   }
 
+  // 2. Match user with verified status
   const user = await User.findOne({ email, accountVerified: true }).select(
     "+password"
   );
@@ -311,15 +329,18 @@ export const login = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Invalid email or password", 400));
   }
 
+  // 3. Compare password using bcrypt
   const isPasswordMatched = await user.comparePassword(password);
 
   if (!isPasswordMatched) {
     return next(new ErrorHandler("Invalid email or password", 400));
   }
+  // 4. Send JWT token
   sendToken(user, 200, "User Logged in Successfully", res);
 });
 
 export const logout = catchAsyncError(async (req, res, next) => {
+  // Clears cookie token
   res
     .status(200)
     .cookie("token", null, {
@@ -331,6 +352,7 @@ export const logout = catchAsyncError(async (req, res, next) => {
 });
 
 export const getUser = catchAsyncError(async (req, res, next) => {
+  // Returns user data from request
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -349,6 +371,8 @@ export const getUser = catchAsyncError(async (req, res, next) => {
 });
 
 export const forgotPassword = catchAsyncError(async (req, res, next) => {
+  // 1. Find verified user by email
+
   const user = await User.findOne({
     email: req.body.email,
     accountVerified: true,
@@ -358,6 +382,8 @@ export const forgotPassword = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
+  // 2. Generate reset token
+
   const resetToken = user.generateResetPasswordToken();
 
   await user.save({ validateBeforeSave: false });
@@ -366,6 +392,7 @@ export const forgotPassword = catchAsyncError(async (req, res, next) => {
 
   const message = `Your password reset token is as follows:\n\n ${resetPasswordUrl} \n\n If you have not requested this email then, please ignore it.`;
 
+  // 3. Email user with reset URL
   try {
     await sendEmail(user.email, "Password Reset Request", message);
 
@@ -389,11 +416,13 @@ export const forgotPassword = catchAsyncError(async (req, res, next) => {
 export const resetPassword = catchAsyncError(async (req, res, next) => {
   const { token } = req.params;
 
+  // 1. Match reset token
   const resetPasswordToken = crypto
     .createHash("sha256")
     .update(token)
     .digest("hex");
 
+  // 2. Check expiry
   const user = await User.findOne({
     resetPasswordToken,
     resetPasswordExpire: { $gt: Date.now() },
@@ -405,10 +434,12 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
     );
   }
 
+  // 3. Match new password & confirm password
   if (req.body.password !== req.body.confirmPassword) {
     return next(new ErrorHandler("Password does not match", 400));
   }
 
+  // 4. Save new password
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
