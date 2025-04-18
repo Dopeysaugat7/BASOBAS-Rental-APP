@@ -181,9 +181,9 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border m-0 p-0 outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-monserrat;
+    @apply bg-background text-foreground font-monserrat overflow-x-hidden;
   }
 }

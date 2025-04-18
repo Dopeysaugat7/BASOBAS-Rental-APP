@@ -90,7 +90,11 @@ export const NavbarSearch = () => {
         />
       </div>
 
-      <Select value={propertyType} onValueChange={setPropertyType}>
+      <Select
+        value={propertyType}
+        onValueChange={setPropertyType}
+        modal={false}
+      >
         <SelectTrigger className="w-[180px] md:w-[160px] lg:w-[200px] rounded-none border-l-0 border-r-0 focus:ring-0 focus:ring-offset-0 border-1 border-accent">
           <div className="flex items-center gap-2">
             <Home className="h-4 w-4 text-muted-foreground" />
@@ -178,7 +182,7 @@ export const Navbar = () => {
               </Button>
 
               {/* User Dropdown */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
