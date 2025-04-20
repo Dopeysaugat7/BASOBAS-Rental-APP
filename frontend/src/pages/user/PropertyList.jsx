@@ -81,7 +81,7 @@ function PropertyCards({
             {type}
           </Badge>
         </CardHeader>
-        <CardContent className="p-4 flex-1">
+        <CardContent className="p-4 md:py-0 flex-1">
           {" "}
           {/* Reduced padding */}
           <div className="flex items-start justify-between mb-1">
