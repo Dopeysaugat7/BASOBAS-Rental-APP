@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@radix-ui/react-slider": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.0"
   },
   "devDependencies": {
