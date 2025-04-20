@@ -497,7 +497,7 @@ const FeaturedRentalsSection = ({
     </motion.div>
 
     <Carousel opts={{ align: "start" }} className="w-full">
-      <CarouselContent className="-ml-2 md:-ml-4">
+      <CarouselContent className="-ml-1 md:-ml-2">
         {properties.map((property) => (
           <CarouselItem
             key={property._id}
@@ -509,7 +509,7 @@ const FeaturedRentalsSection = ({
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col border border-border py-0">
+              <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col border border-border dark:border-gray-700 py-0">
                 <CardHeader className="p-0 relative">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -517,7 +517,7 @@ const FeaturedRentalsSection = ({
                     className="overflow-hidden"
                   >
                     <img
-                      className="w-full h-48 sm:h-56 md:h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-36 sm:h-40 md:h-44 object-cover transition-transform duration-500 group-hover:scale-105"
                       src={
                         property.images[0]?.url ||
                         "https://via.placeholder.com/300"
@@ -529,66 +529,66 @@ const FeaturedRentalsSection = ({
                   <motion.div
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-3 right-3"
+                    className="absolute top-2 right-2"
                   >
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 h-8 w-8 md:h-10 md:w-10"
+                      className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 h-7 w-7 md:h-8 md:w-8"
                       onClick={() => handleFavoriteToggle(property._id)}
                     >
                       <Heart
-                        className={`h-4 w-4 md:h-5 md:w-5 ${
+                        className={`h-3 w-3 md:h-4 md:w-4 ${
                           isFavorite
                             ? "fill-red-500 stroke-red-500"
-                            : "stroke-muted-foreground hover:stroke-red-500"
+                            : "stroke-muted-foreground dark:stroke-gray-400 hover:stroke-red-500"
                         }`}
                       />
                     </Button>
                   </motion.div>
                   <Badge
                     variant="secondary"
-                    className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm text-foreground text-xs"
+                    className="absolute bottom-3 left-3 bg-background/90 dark:bg-gray-800/90 backdrop-blur-sm text-foreground dark:text-white text-[10px] md:text-xs"
                   >
                     {property.propertyType}
                   </Badge>
                 </CardHeader>
-                <CardContent className="p-4 md:p-5 flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-base md:text-lg line-clamp-1 text-foreground">
+                <CardContent className="p-2 md:p-3 flex-1">
+                  <div className="flex items-start justify-between mb-1">
+                    <h3 className="font-semibold text-base md:text-lg line-clamp-1 text-foreground dark:text-white">
                       {property.title}
                     </h3>
                     <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 stroke-yellow-400" />
-                      <span className="font-medium text-sm md:text-base">
+                      <Star className="h-3 w-3 md:h-3 md:w-3 fill-yellow-400 stroke-yellow-400" />
+                      <span className="font-medium text-base md:text-sm dark:text-white">
                         {property.averageRating || "New"}
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1 mb-2 md:mb-3">
-                    <MapPin className="h-3 w-3 md:h-4 md:w-5 flex-shrink-0" />
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-1 py-1">
+                    <MapPin className="h-3 w-3 md:h-3 md:w-3 flex-shrink-0" />
                     {property.address.city}, {property.address.country}
                   </p>
-                  <div className="flex flex-wrap gap-1 md:gap-2 mb-3 md:mb-4">
+                  <div className="flex flex-wrap gap-1 mb-2">
                     {property.amenities.slice(0, 3).map((amenity, i) => (
                       <motion.span
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
-                        className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground transition-colors duration-300 hover:bg-primary/10"
+                        className="text-[10px] px-1.5 py-0.5 bg-muted dark:bg-gray-700 rounded-full text-muted-foreground dark:text-gray-300 transition-colors duration-300 hover:bg-primary/10 dark:hover:bg-primary/20"
                       >
                         {amenity}
                       </motion.span>
                     ))}
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 md:p-5 pt-0 border-t border-border">
+                <CardFooter className="p-2 md:p-3 pt-0 border-t border-border dark:border-gray-700">
                   <div className="w-full flex justify-between items-center">
                     <div>
-                      <span className="font-bold text-base md:text-lg text-foreground">
+                      <span className="font-bold text-base md:text-base text-foreground dark:text-white">
                         ₨. {property.pricePerMonth}
                       </span>
-                      <span className="text-xs md:text-sm text-muted-foreground">
+                      <span className="text-xs md:text-sm text-muted-foreground dark:text-gray-400">
                         /month
                       </span>
                     </div>
@@ -601,7 +601,7 @@ const FeaturedRentalsSection = ({
                         asChild
                         variant="default"
                         size="sm"
-                        className="bg-primary hover:bg-primary/90 text-xs md:text-sm"
+                        className="bg-primary hover:bg-primary/90 text-xs h-7 md:text-sm"
                       >
                         <Link to={`/${property._id}`}>View Details</Link>
                       </Button>
@@ -613,9 +613,9 @@ const FeaturedRentalsSection = ({
           </CarouselItem>
         ))}
       </CarouselContent>
-      <div className="flex justify-center mt-6 md:mt-8 gap-2">
-        <CarouselPrevious className="relative inset-0 translate-y-0 bg-background hover:bg-background/90 border-border h-8 w-8 md:h-10 md:w-10" />
-        <CarouselNext className="relative inset-0 translate-y-0 bg-background hover:bg-background/90 border-border h-8 w-8 md:h-10 md:w-10" />
+      <div className="flex justify-center mt-4 md:mt-6 gap-2">
+        <CarouselPrevious className="relative inset-0 translate-y-0 bg-background dark:bg-gray-800 hover:bg-background/90 dark:hover:bg-gray-700 border-border dark:border-gray-600 h-7 w-7 md:h-8 md:w-8" />
+        <CarouselNext className="relative inset-0 translate-y-0 bg-background dark:bg-gray-800 hover:bg-background/90 dark:hover:bg-gray-700 border-border dark:border-gray-600 h-7 w-7 md:h-8 md:w-8" />
       </div>
     </Carousel>
   </section>
