@@ -145,7 +145,7 @@ const MyProperties = () => {
         <Button
           variant={filter === "expired" ? "default" : "outline"}
           onClick={() => setFilter("expired")}
-          className="whitespace-nowrap px-4 py-2 text-sm"
+          className="whitespace-nowrap px-4 py-2 text-sm "
         >
           <XCircle className="h-4 w-4 mr-1" />
           Expired

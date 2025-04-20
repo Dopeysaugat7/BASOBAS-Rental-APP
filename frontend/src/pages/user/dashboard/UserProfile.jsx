@@ -57,10 +57,9 @@ export const UserProfile = () => {
     handleSubmit: handlePasswordSubmit,
     reset: passwordReset,
     watch: passwordWatch,
-    formState: { errors: passwordErrors, isPasswordSubmitting },
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
   } = useForm();
 
-  // Initialize form with user data
   useEffect(() => {
     if (user) {
       profileReset({
@@ -112,7 +111,6 @@ export const UserProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file
     if (!file.type.match("image.*")) {
       toast.error("Please select an image file (JPEG, PNG, GIF)");
       return;
@@ -133,7 +131,6 @@ export const UserProfile = () => {
       setIsLoading(true);
       const formData = new FormData();
 
-      // Append all fields
       formData.append("name", data.name || "");
       formData.append("phone", data.phone || "");
       if (data.bio) formData.append("bio", data.bio);
@@ -174,7 +171,6 @@ export const UserProfile = () => {
     try {
       setIsLoading(true);
 
-      // Ensure all fields are properly formatted
       const payload = {
         currentPassword: data.currentPassword.trim(),
         newPassword: data.newPassword.trim(),
@@ -234,25 +230,27 @@ export const UserProfile = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-full">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <AlertDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-300">
               This action cannot be undone. This will permanently delete your
               account and remove your data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="dark:border-gray-600 dark:text-white dark:hover:bg-gray-700">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
               disabled={isLoading}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 dark:bg-red-600 dark:hover:bg-red-700"
             >
               {isLoading ? "Deleting..." : "Delete Account"}
             </AlertDialogAction>
@@ -260,400 +258,432 @@ export const UserProfile = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-        </TabsList>
+      <div className="max-w-6xl mx-auto">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 bg-gray-200 dark:bg-gray-800 gap-1 p-1 rounded-lg">
+            <TabsTrigger 
+              value="profile" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-white py-2 rounded-md font-medium transition-all duration-300 dark:data-[state=active]:bg-[#027EAA] dark:data-[state=active]:text-white dark:text-gray-300"
+            >
+              Profile
+            </TabsTrigger>
+            <TabsTrigger 
+              value="security" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-white py-2 rounded-md font-medium transition-all duration-300 dark:data-[state=active]:bg-[#027EAA] dark:data-[state=active]:text-white dark:text-gray-300"
+            >
+              Security
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bookings" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-white py-2 rounded-md font-medium transition-all duration-300 dark:data-[state=active]:bg-[#027EAA] dark:data-[state=active]:text-white dark:text-gray-300"
+            >
+              My Bookings
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="mt-6">
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <form onSubmit={handleProfileSubmit(updateProfile)}>
-              <div className="flex sm:flex-row sm:items-start flex-col gap-6 mb-8 bg-white dark:bg-[#0f172b] p-6 rounded-lg border-1">
-                <div className="flex sm:flex-col items-center justify-center gap-10 sm:gap-2">
-                  <Avatar className="h-24 w-24 sm:mb-4 mb-2">
-                    <AvatarImage
-                      src={
-                        profilePicturePreview ||
-                        user?.profilePicture ||
-                        "/default-image.svg"
-                      }
-                      alt={user?.name}
-                      className="object-cover"
-                    />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="relative">
-                    <Button variant="outline" size="sm" type="button">
+          <div className="mt-6">
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-6">
+              <form onSubmit={handleProfileSubmit(updateProfile)}>
+                <div className="flex flex-col md:flex-row gap-6 mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <Avatar className="h-32 w-32 border-4 border-[#027EAA]">
+                        <AvatarImage
+                          src={
+                            profilePicturePreview ||
+                            user?.profilePicture ||
+                            "/default-image.svg"
+                          }
+                          alt={user?.name}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-[#027EAA] text-white text-2xl">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <Label
                         htmlFor="profilePicture"
-                        className="cursor-pointer"
+                        className="absolute -bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                       >
-                        Change Photo
-                      </Label>
-                    </Button>
-                    <Input
-                      id="profilePicture"
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={handleProfilePictureChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex-1 w-full space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name" className="text-sm font-medium">
-                        Full Name
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-[#027EAA] dark:text-[#027EAA]"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
                       </Label>
                       <Input
-                        id="name"
-                        className="sm:text-sm sm:font-medium mt-1"
-                        {...profileRegister("name", {
-                          required: "Full name is required",
-                        })}
-                        placeholder="Your name"
+                        id="profilePicture"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfilePictureChange}
                       />
-                      {profileErrors.name && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {profileErrors.name.message}
-                        </p>
-                      )}
                     </div>
+                  </div>
 
-                    <div>
-                      <Label htmlFor="username" className="text-sm font-medium">
-                        Username
-                      </Label>
-                      <div className="flex items-center mt-1">
-                        <span className="text-gray-600 mr-1">@</span>
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Full Name
+                        </Label>
                         <Input
-                          id="username"
-                          className="flex-1"
-                          {...profileRegister("username")}
-                          placeholder="username"
+                          id="name"
+                          className="mt-1 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                          {...profileRegister("name", {
+                            required: "Full name is required",
+                          })}
+                          placeholder="Your name"
                         />
+                        {profileErrors.name && (
+                          <p className="text-sm text-red-500 dark:text-red-400 mt-1">
+                            {profileErrors.name.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Username
+                        </Label>
+                        <div className="flex items-center mt-1">
+                          <span className="text-gray-600 dark:text-gray-400 mr-1">@</span>
+                          <Input
+                            id="username"
+                            className="flex-1 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                            {...profileRegister("username")}
+                            placeholder="username"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <Card className="border rounded-lg mb-6 shadow-none">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Personal Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
-                    <Input
-                      id="bio"
-                      {...profileRegister("bio")}
-                      placeholder="Tell us about yourself"
-                    />
-                  </div>
+                <Card className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm mb-6">
+                  <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                    <CardTitle className="text-lg text-gray-800 dark:text-white">
+                      Personal Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bio" className="text-gray-700 dark:text-gray-300">Bio</Label>
+                      <Input
+                        id="bio"
+                        {...profileRegister("bio")}
+                        placeholder="Tell us about yourself"
+                        className="bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          {profileWatch("dateOfBirth") ? (
-                            format(profileWatch("dateOfBirth"), "PPP")
-                          ) : (
-                            <span>Select your date of birth</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={profileWatch("dateOfBirth")}
-                          onSelect={(date) =>
-                            setProfileValue("dateOfBirth", date)
-                          }
-                          initialFocus
+                    <div className="space-y-2">
+                      <Label htmlFor="dateOfBirth" className="text-gray-700 dark:text-gray-300">Date of Birth</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            {profileWatch("dateOfBirth") ? (
+                              format(profileWatch("dateOfBirth"), "PPP")
+                            ) : (
+                              <span className="text-gray-500 dark:text-gray-400">Select your date of birth</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                          <Calendar
+                            mode="single"
+                            selected={profileWatch("dateOfBirth")}
+                            onSelect={(date) =>
+                              setProfileValue("dateOfBirth", date)
+                            }
+                            initialFocus
+                            className="dark:bg-gray-800"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email</Label>
+                      <div className="relative">
+                        <Input
+                          id="email"
+                          {...profileRegister("email")}
+                          placeholder="your@email.com"
+                          disabled
+                          className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 border-gray-300 opacity-100 cursor-not-allowed"
                         />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                        {!user?.accountVerified && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={handleVerifyEmail}
+                            disabled={isLoading}
+                            className="absolute right-0 top-0 text-sm text-[#027EAA] hover:text-[#02658a] dark:text-[#027EAA] dark:hover:text-[#3da7c8]"
+                          >
+                            Verify
+                          </Button>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      {...profileRegister("email")}
-                      placeholder="your@email.com"
-                      disabled
-                      className="opacity-70 cursor-not-allowed"
-                    />
-                    {!user?.accountVerified && (
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        {...profileRegister("phone", {
+                          required: "Phone is required",
+                        })}
+                        placeholder="+1234567890"
+                        className="bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                      />
+                      {profileErrors.phone && (
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                          {profileErrors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                  <div className="flex justify-end p-6 border-t dark:border-gray-700">
+                    <Button
+                      type="submit"
+                      disabled={isProfileSubmitting || isLoading}
+                      className="bg-[#027EAA] hover:bg-[#02658a] px-6 py-2 rounded-lg dark:bg-[#027EAA] dark:hover:bg-[#02658a]"
+                    >
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </Card>
+              </form>
+            </TabsContent>
+
+            {/* Security Tab */}
+            <TabsContent value="security" className="space-y-6">
+              <Card className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                  <CardTitle className="text-lg text-gray-800 dark:text-white">Account Verification</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:border-gray-600">
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-gray-300">Email Verified</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</p>
+                    </div>
+                    {user?.accountVerified ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        Verified
+                      </span>
+                    ) : (
                       <Button
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={handleVerifyEmail}
                         disabled={isLoading}
-                        className="p-0 h-auto text-sm"
+                        className="border-[#027EAA] text-[#027EAA] hover:bg-[#027EAA]/10 dark:border-[#027EAA] dark:text-[#027EAA] dark:hover:bg-[#027EAA]/20"
                       >
-                        Verify your email
+                        Verify
                       </Button>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      {...profileRegister("phone", {
-                        required: "Phone is required",
-                      })}
-                      placeholder="+1234567890"
-                    />
-                    {profileErrors.phone && (
-                      <p className="text-sm text-red-500">
-                        {profileErrors.phone.message}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-                <div className="flex justify-end mr-6">
-                  <Button
-                    type="submit"
-                    disabled={isProfileSubmitting || isLoading}
-                  >
-                    {isLoading ? "Saving..." : "Save All Changes"}
-                  </Button>
-                </div>
-              </Card>
-
-              {/* <div className="flex justify-end mb-6">
-                <Button
-                  type="submit"
-                  disabled={isProfileSubmitting || isLoading}
-                >
-                  {isLoading ? "Saving..." : "Save All Changes"}
-                </Button>
-              </div> */}
-            </form>
-          </TabsContent>
-
-          {/* Security Tab */}
-          <TabsContent value="security" className="space-y-6">
-            <Card className="border rounded-lg shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg">Account Verification</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div>
-                    <p className="font-medium">Email Verified</p>
-                    <p className="text-sm text-gray-600">{user?.email}</p>
-                  </div>
-                  {user?.accountVerified ? (
-                    <span className="text-green-600 text-sm font-medium">
-                      Verified
-                    </span>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleVerifyEmail}
-                      disabled={isLoading}
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:border-gray-600">
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-gray-300">Phone Verified</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{user?.phone}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled 
+                      className="text-gray-400 dark:text-gray-500 dark:border-gray-600"
                     >
                       Verify
                     </Button>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div>
-                    <p className="font-medium">Phone Verified</p>
-                    <p className="text-sm text-gray-600">{user?.phone}</p>
-                  </div>
-                  <Button variant="outline" size="sm" disabled>
-                    Verify
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Password Change Form - Now Independent */}
-            <Card className="border rounded-lg shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg">Change Password</CardTitle>
-              </CardHeader>
-              <form onSubmit={handlePasswordSubmit(changePassword)}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      {...passwordRegister("currentPassword", {
-                        required: "Current password is required",
-                      })}
-                    />
-                    {passwordErrors.currentPassword && (
-                      <p className="text-sm text-red-500">
-                        {passwordErrors.currentPassword.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      {...passwordRegister("newPassword", {
-                        required: "New password is required",
-                        minLength: {
-                          value: 8,
-                          message: "Password must be at least 8 characters",
-                        },
-                        maxLength: {
-                          value: 32,
-                          message: "Password cannot exceed 32 characters",
-                        },
-                      })}
-                    />
-                    {passwordErrors.newPassword && (
-                      <p className="text-sm text-red-500">
-                        {passwordErrors.newPassword.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      {...passwordRegister("confirmPassword", {
-                        required: "Please confirm your password",
-                        validate: (value) =>
-                          value === passwordWatch("newPassword") ||
-                          "Passwords don't match",
-                      })}
-                    />
-                    {passwordErrors.confirmPassword && (
-                      <p className="text-sm text-red-500">
-                        {passwordErrors.confirmPassword.message}
-                      </p>
-                    )}
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end mt-5">
+              </Card>
+
+              <form onSubmit={handlePasswordSubmit(changePassword)}>
+                <Card className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                  <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                    <CardTitle className="text-lg text-gray-800 dark:text-white">Change Password</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword" className="text-gray-700 dark:text-gray-300">Current Password</Label>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        {...passwordRegister("currentPassword", {
+                          required: "Current password is required",
+                        })}
+                        className="bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                      />
+                      {passwordErrors.currentPassword && (
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                          {passwordErrors.currentPassword.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword" className="text-gray-700 dark:text-gray-300">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        {...passwordRegister("newPassword", {
+                          required: "New password is required",
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters",
+                          },
+                          maxLength: {
+                            value: 32,
+                            message: "Password cannot exceed 32 characters",
+                          },
+                        })}
+                        className="bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                      />
+                      {passwordErrors.newPassword && (
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                          {passwordErrors.newPassword.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300">
+                        Confirm New Password
+                      </Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        {...passwordRegister("confirmPassword", {
+                          required: "Please confirm your password",
+                          validate: (value) =>
+                            value === passwordWatch("newPassword") ||
+                            "Passwords don't match",
+                        })}
+                        className="bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white border-gray-300 focus:border-[#027EAA] focus:ring-[#027EAA]"
+                      />
+                      {passwordErrors.confirmPassword && (
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                          {passwordErrors.confirmPassword.message}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end p-6 border-t dark:border-gray-700">
+                    <Button
+                      type="submit"
+                      disabled={isPasswordSubmitting || isLoading}
+                      className="bg-[#027EAA] hover:bg-[#02658a] px-6 py-2 rounded-lg dark:bg-[#027EAA] dark:hover:bg-[#02658a]"
+                    >
+                      {isLoading ? "Updating..." : "Change Password"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </form>
+
+              <Card className="border-2 border-red-200 dark:border-red-800 rounded-lg">
+                <CardHeader className="bg-red-50 dark:bg-red-900/20 border-b-2 border-red-200 dark:border-red-800">
+                  <CardTitle className="text-lg text-red-800 dark:text-red-500">
+                    Delete Account
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Once you delete your account, there is no going back. Please
+                    be certain.
+                  </p>
+                </CardContent>
+                <CardFooter className="flex justify-end p-6 border-t-2 border-red-200 dark:border-red-800">
                   <Button
-                    type="submit"
-                    disabled={isPasswordSubmitting || isLoading}
+                    variant="destructive"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    disabled={isLoading}
+                    className="px-6 py-2 rounded-lg"
                   >
-                    {isLoading ? "Updating..." : "Change Password"}
+                    Delete Account
                   </Button>
                 </CardFooter>
-              </form>
-            </Card>
+              </Card>
+            </TabsContent>
 
-            <Card className="border-2 rounded-lg border-destructive shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg text-destructive">
-                  Delete Account
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Once you delete your account, there is no going back. Please
-                  be certain.
-                </p>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isLoading}
-                >
-                  Delete Account
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="bookings" className="space-y-6">
-            {/* Bookings content */}
-            <Card className="border rounded-lg shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg">My Bookings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">Ocean View Villa</h3>
-                      <p className="text-gray-400">Miami, Florida</p>
+            <TabsContent value="bookings" className="space-y-6">
+              <Card className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                  <CardTitle className="text-lg text-gray-800 dark:text-white">My Bookings</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:border-gray-600">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="font-bold text-gray-800 dark:text-white">Ocean View Villa</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Miami, Florida</p>
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        Upcoming
+                      </span>
                     </div>
-                    <span className="text-green-400 text-sm font-medium">
-                      Upcoming
-                    </span>
-                  </div>
-                  <p className="text-sm mt-2">Check-in: Mar 15, 2025</p>
-                  <div className="flex justify-end mt-3">
-                    <Button variant="link" className="text-blue-600 p-0 h-auto">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">Mountain Retreat</h3>
-                      <p className="text-gray-400">Aspen, Colorado</p>
+                    <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Check-in: Mar 15, 2025</p>
+                    <div className="flex justify-end mt-3">
+                      <Button variant="link" className="text-[#027EAA] p-0 h-auto dark:text-[#027EAA]">
+                        View Details
+                      </Button>
                     </div>
-                    <span className="text-gray-400 text-sm font-medium">
-                      Completed
-                    </span>
                   </div>
-                  <p className="text-sm mt-2">Check-in: Feb 1, 2025</p>
-                  <div className="flex justify-end mt-3">
-                    <Button variant="link" className="text-blue-600 p-0 h-auto">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border rounded-lg shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg">My Reviews</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <h3 className="font-bold">John Host</h3>
-                  <p className="text-gray-400">Ocean View Villa</p>
-                  <p className="mt-2 text-gray-50">
-                    "Sarah was a wonderful guest! Very respectful of the
-                    property and great communication throughout their stay."
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </div>
-      </Tabs>
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:border-gray-600">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="font-bold text-gray-800 dark:text-white">Mountain Retreat</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Aspen, Colorado</p>
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        Completed
+                      </span>
+                    </div>
+                    <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Check-in: Feb 1, 2025</p>
+                    <div className="flex justify-end mt-3">
+                      <Button variant="link" className="text-[#027EAA] p-0 h-auto dark:text-[#027EAA]">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                  <CardTitle className="text-lg text-gray-800 dark:text-white">My Reviews</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:border-gray-600">
+                    <h3 className="font-bold text-gray-800 dark:text-white">John Host</h3>
+                    <p className="text-gray-500 dark:text-gray-400">Ocean View Villa</p>
+                    <p className="mt-2 text-gray-700 dark:text-gray-300">
+                      "Sarah was a wonderful guest! Very respectful of the
+                      property and great communication throughout their stay."
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 };
