@@ -39,6 +39,7 @@ import {
 import { useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -70,23 +71,7 @@ function PropertyCards({
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-100"
               loading="lazy"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsFavorite(!isFavorite);
-              }}
-              className="absolute top-3 right-3 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm p-2 transition-all duration-200 hover:scale-110"
-            >
-              <Heart
-                className={`h-5 w-5 ${
-                  isFavorite
-                    ? "fill-red-500 text-red-500"
-                    : "text-foreground/80"
-                } transition-colors duration-200`}
-              />
-            </Button>
+            <FavoriteButton propertyId={id} />
           </div>
           <CardContent className="p-5 flex-grow">
             <div className="flex justify-between items-start gap-3">

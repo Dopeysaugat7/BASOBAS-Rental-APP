@@ -41,6 +41,7 @@ import {
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -123,10 +124,6 @@ export default function Home() {
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorDisplay message={error} />;
 
-  const handleFavoriteToggle = async (propertyId) => {
-    setIsFavorite((prev) => !prev);
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground font-sans antialiased">
       {/* Hero Section */}
@@ -144,11 +141,7 @@ export default function Home() {
       />
 
       {/* Featured Rentals */}
-      <FeaturedRentalsSection
-        properties={properties}
-        isFavorite={isFavorite}
-        handleFavoriteToggle={handleFavoriteToggle}
-      />
+      <FeaturedRentalsSection properties={properties} />
 
       {/* Testimonials */}
       <TestimonialsSection testimonials={testimonials} />
@@ -531,20 +524,7 @@ const FeaturedRentalsSection = ({
                     transition={{ duration: 0.2 }}
                     className="absolute top-2 right-2"
                   >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 h-7 w-7 md:h-8 md:w-8"
-                      onClick={() => handleFavoriteToggle(property._id)}
-                    >
-                      <Heart
-                        className={`h-3 w-3 md:h-4 md:w-4 ${
-                          isFavorite
-                            ? "fill-red-500 stroke-red-500"
-                            : "stroke-muted-foreground dark:stroke-gray-400 hover:stroke-red-500"
-                        }`}
-                      />
-                    </Button>
+                    <FavoriteButton propertyId={property._id} />
                   </motion.div>
                   <Badge
                     variant="secondary"
