@@ -163,7 +163,7 @@ export const Navbar = () => {
             {/* Navigation Links */}
             <nav className="flex items-center gap-2 lg:gap-6">
               <Button variant="ghost" className="rounded-full" asChild>
-                <Link to="/favorites">
+                <Link to="/dashboard/favorites">
                   <Heart className="h-5 w-5" />
                 </Link>
               </Button>

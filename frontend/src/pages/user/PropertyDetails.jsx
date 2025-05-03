@@ -74,6 +74,7 @@ import {
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -81,55 +82,11 @@ const PropertyDetails = () => {
   const navigate = useNavigate();
   const [openCheckout, setOpenCheckout] = useState(false);
   const [openVisitDialog, setOpenVisitDialog] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
 
   let { data: property, isLoading, isError } = useProperty(id);
   property = property?.property;
 
   const isOwner = user && property && user._id === property.host._id;
-
-  // Check if property is in favorites
-  useEffect(() => {
-    const checkFavorite = async () => {
-      if (user) {
-        try {
-          const res = await axios.get("http://localhost:5000/api/favorites", {
-            withCredentials: true,
-          });
-          const favorites = res.data.data;
-          setIsFavorite(favorites.some((fav) => fav._id === id));
-        } catch (error) {
-          console.error("Error checking favorites:", error);
-        }
-      }
-    };
-    checkFavorite();
-  }, [user, id]);
-
-  // Handle favorite toggle
-  const handleFavoriteToggle = async () => {
-    if (!user) {
-      toast.error("Please log in to add to favorites");
-      return;
-    }
-
-    try {
-      const endpoint = isFavorite ? "/remove" : "/add";
-      await axios.post(
-        `http://localhost:5000/api/favorites${endpoint}`,
-        { propertyId: id },
-        { withCredentials: true }
-      );
-      setIsFavorite(!isFavorite);
-      toast.success(
-        isFavorite ? "Removed from favorites" : "Added to favorites"
-      );
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to update favorites"
-      );
-    }
-  };
 
   // Booking form
   const bookingForm = useForm({
@@ -287,13 +244,7 @@ const PropertyDetails = () => {
             <Button variant="ghost" size="icon">
               <Share2 className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleFavoriteToggle}>
-              <Heart
-                className={`h-5 w-5 ${
-                  isFavorite ? "fill-current text-red-500" : ""
-                }`}
-              />
-            </Button>
+            <FavoriteButton propertyId={property._id} />
           </div>
         </div>
 

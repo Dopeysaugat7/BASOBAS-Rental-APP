@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Heart,
   Star,
   Mountain,
   Building,
@@ -22,6 +21,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -38,8 +38,6 @@ function PropertyCards({
   amenities,
   type,
 }) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -57,23 +55,7 @@ function PropertyCards({
               loading="lazy"
             />
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsFavorite(!isFavorite);
-            }}
-            className="absolute top-2 right-2 rounded-full bg-background/80 dark:bg-background/60 hover:bg-primary/80 transition-all duration-300 backdrop-blur-sm"
-          >
-            <Heart
-              className={`h-5 w-5 ${
-                isFavorite
-                  ? "fill-primary stroke-primary"
-                  : "stroke-gray-600 dark:stroke-gray-400"
-              }`}
-            />
-          </Button>
+          <FavoriteButton propertyId={id} />
           <Badge
             variant="secondary"
             className="absolute bottom-3 left-3 bg-white/90 dark:bg-gray-800/90 text-foreground dark:text-white border-0 shadow-sm"

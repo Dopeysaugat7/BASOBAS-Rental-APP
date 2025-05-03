@@ -27,13 +27,13 @@ import ActiveProperties from "./pages/user/dashboard/ActiveProperty";
 import PropertyDetails from "./pages/user/PropertyDetails";
 import EditProperty from "./pages/user/EditProperty";
 import Billing from "./pages/user/dashboard/Billing";
-import { Favorites } from "./pages/user/dashboard/Favorites";
 import Dashboard from "./pages/user/dashboard/Dashboard";
 import VisitsDashboard from "./pages/user/dashboard/VisitLog";
 import SearchProperty from "./pages/user/SearchProperty";
 import PropertyList from "./pages/user/PropertyList";
 import BookingSuccess from "./components/BookingSuccess";
 import BookingFaliure from "./components/BookingFaliure";
+import Favorites from "./pages/user/dashboard/Favorites";
 
 function App() {
   return (
