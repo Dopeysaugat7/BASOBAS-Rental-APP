@@ -22,7 +22,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +42,8 @@ export const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
   const {
     register: profileRegister,
@@ -57,10 +59,37 @@ export const UserProfile = () => {
     handleSubmit: handlePasswordSubmit,
     reset: passwordReset,
     watch: passwordWatch,
-    formState: { errors: passwordErrors, isPasswordSubmitting },
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
   } = useForm();
 
-  // Initialize form with user data
+  // Format address object into a string
+  const formatAddress = (address) => {
+    if (!address || typeof address !== "object") return "Address not available";
+    const { street, city, state, country, postalCode } = address;
+    const parts = [street, city, state, postalCode, country].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "Address not available";
+  };
+
+  // Fetch user bookings
+  const fetchBookings = async () => {
+    try {
+      setBookingsLoading(true);
+      const response = await axios.get(
+        "http://localhost:5000/api/bookings/my-bookings",
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      setBookings(response.data.data);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch bookings");
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
+
+  // Initialize form and fetch bookings
   useEffect(() => {
     if (user) {
       profileReset({
@@ -73,7 +102,15 @@ export const UserProfile = () => {
       });
       setProfilePicturePreview(user.profilePicture || "");
     }
+    fetchBookings();
   }, [user, profileReset]);
+
+  // Refetch bookings if coming from /booking/success
+  useEffect(() => {
+    if (location.state?.fromBookingSuccess) {
+      fetchBookings();
+    }
+  }, [location.state]);
 
   const handleVerifyEmail = async () => {
     try {
@@ -112,7 +149,6 @@ export const UserProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file
     if (!file.type.match("image.*")) {
       toast.error("Please select an image file (JPEG, PNG, GIF)");
       return;
@@ -133,7 +169,6 @@ export const UserProfile = () => {
       setIsLoading(true);
       const formData = new FormData();
 
-      // Append all fields
       formData.append("name", data.name || "");
       formData.append("phone", data.phone || "");
       if (data.bio) formData.append("bio", data.bio);
@@ -174,7 +209,6 @@ export const UserProfile = () => {
     try {
       setIsLoading(true);
 
-      // Ensure all fields are properly formatted
       const payload = {
         currentPassword: data.currentPassword.trim(),
         newPassword: data.newPassword.trim(),
@@ -230,6 +264,20 @@ export const UserProfile = () => {
     } finally {
       setIsLoading(false);
       setIsDeleteDialogOpen(false);
+    }
+  };
+
+  // Map booking status to display label and color
+  const getBookingStatus = (status) => {
+    switch (status) {
+      case "confirmed":
+        return { label: "Upcoming", color: "text-green-500 bg-green-100" };
+      case "cancelled":
+        return { label: "Failed", color: "text-red-500 bg-red-100" };
+      case "pending":
+        return { label: "Pending", color: "text-yellow-500 bg-yellow-100" };
+      default:
+        return { label: status, color: "text-gray-500 bg-gray-100" };
     }
   };
 
@@ -436,15 +484,6 @@ export const UserProfile = () => {
                   </Button>
                 </div>
               </Card>
-
-              {/* <div className="flex justify-end mb-6">
-                <Button
-                  type="submit"
-                  disabled={isProfileSubmitting || isLoading}
-                >
-                  {isLoading ? "Saving..." : "Save All Changes"}
-                </Button>
-              </div> */}
             </form>
           </TabsContent>
 
@@ -488,7 +527,6 @@ export const UserProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Password Change Form - Now Independent */}
             <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">Change Password</CardTitle>
@@ -591,52 +629,82 @@ export const UserProfile = () => {
             </Card>
           </TabsContent>
 
+          {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
-            {/* Bookings content */}
             <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">My Bookings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">Ocean View Villa</h3>
-                      <p className="text-gray-400">Miami, Florida</p>
-                    </div>
-                    <span className="text-green-400 text-sm font-medium">
-                      Upcoming
-                    </span>
-                  </div>
-                  <p className="text-sm mt-2">Check-in: Mar 15, 2025</p>
-                  <div className="flex justify-end mt-3">
-                    <Button variant="link" className="text-blue-600 p-0 h-auto">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">Mountain Retreat</h3>
-                      <p className="text-gray-400">Aspen, Colorado</p>
-                    </div>
-                    <span className="text-gray-400 text-sm font-medium">
-                      Completed
-                    </span>
-                  </div>
-                  <p className="text-sm mt-2">Check-in: Feb 1, 2025</p>
-                  <div className="flex justify-end mt-3">
-                    <Button variant="link" className="text-blue-600 p-0 h-auto">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
+                {bookingsLoading ? (
+                  <p className="text-sm text-gray-600">Loading bookings...</p>
+                ) : bookings.length === 0 ? (
+                  <p className="text-sm text-gray-600">No bookings found.</p>
+                ) : (
+                  bookings.map((booking) => {
+                    const status = getBookingStatus(booking.status);
+                    const primaryImage =
+                      booking.property.images?.[0].url ||
+                      "/placeholder-property.jpg";
+                    return (
+                      <div
+                        key={booking._id}
+                        className="flex flex-col sm:flex-row items-start bg-white dark:bg-[#0f172b] border rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
+                      >
+                        <img
+                          src={primaryImage}
+                          alt={`${booking.property.title} thumbnail`}
+                          className="w-full sm:w-32 h-24 object-cover rounded-md mb-4 sm:mb-0 sm:mr-4"
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-lg">
+                                {booking.property.title}
+                              </h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {formatAddress(booking.property.address)}
+                              </p>
+                            </div>
+                            <span
+                              className={`${status.color} text-xs font-medium px-2 py-1 rounded-full`}
+                            >
+                              {status.label}
+                            </span>
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-sm">
+                              Check-in:{" "}
+                              {format(new Date(booking.startDate), "PPP")}
+                            </p>
+                            <p className="text-sm">
+                              Check-out:{" "}
+                              {format(new Date(booking.endDate), "PPP")}
+                            </p>
+                            <p className="text-sm font-medium">
+                              Total Amount: NPR {booking.totalAmount}
+                            </p>
+                          </div>
+                          <div className="flex justify-end mt-3">
+                            <Button
+                              variant="link"
+                              className="text-blue-600 p-0 h-auto hover:underline"
+                              onClick={() =>
+                                navigate(`/${booking.property._id}`)
+                              }
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
 
-            <Card className="border rounded-lg shadow-none">
+            {/* <Card className="border rounded-lg shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg">My Reviews</CardTitle>
               </CardHeader>
@@ -650,7 +718,7 @@ export const UserProfile = () => {
                   </p>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </TabsContent>
         </div>
       </Tabs>
