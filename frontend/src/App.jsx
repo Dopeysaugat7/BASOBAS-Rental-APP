@@ -32,6 +32,8 @@ import Dashboard from "./pages/user/dashboard/Dashboard";
 import VisitsDashboard from "./pages/user/dashboard/VisitLog";
 import SearchProperty from "./pages/user/SearchProperty";
 import PropertyList from "./pages/user/PropertyList";
+import BookingSuccess from "./components/BookingSuccess";
+import BookingFaliure from "./components/BookingFaliure";
 
 function App() {
   return (
@@ -56,6 +58,8 @@ function App() {
           <Route path="/:id" element={<PropertyDetails />} />
           <Route path="/search" element={<SearchProperty />} />
           <Route path="/properties" element={<PropertyList />} />
+          <Route path="/booking/success" element={<BookingSuccess />} />
+          <Route path="/booking/faliure" element={<BookingFaliure />} />
         </Route>
 
         <Route path="/auth" element={<UserAuth />} />

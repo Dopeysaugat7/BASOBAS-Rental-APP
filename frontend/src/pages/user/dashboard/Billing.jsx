@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-vars */
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import {
   Card,
   CardHeader,
@@ -15,7 +19,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  differenceInMonths,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "lucide-react";
 import {
@@ -25,103 +35,294 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-// import { loadStripe } from "@stripe/stripe-js";
-// import { Elements, PaymentElement } from "@stripe/stripe-react";
-
-// Initialize Stripe (you'll need to set up your publishable key)
-//   const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const Billing = () => {
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 7);
+  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalDue, setTotalDue] = useState(0);
+  const [dueDate, setDueDate] = useState(null);
+  const [progress, setProgress] = useState(0);
 
-  const paymentHistory = [
-    { id: 1, date: "2023-10-15", amount: 1200, status: "Paid" },
-    { id: 2, date: "2023-09-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-    { id: 3, date: "2023-08-15", amount: 1200, status: "Paid" },
-  ];
+  // Calculate current month and due date
+  const currentDate = new Date();
+  const currentMonthStr = format(currentDate, "yyyy-MM"); // Current month (e.g., 2025-05)
+  const nextMonth = addMonths(currentDate, 1);
+  const calculatedDueDate = new Date(
+    nextMonth.getFullYear(),
+    nextMonth.getMonth(),
+    7
+  );
 
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   // Handle payment submission with Stripe
-  // };
+  // Fetch bookings and payments
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch bookings
+      const bookingResponse = await axios.get(
+        "http://localhost:5000/api/bookings/my-bookings",
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const fetchedBookings = bookingResponse.data.data;
+
+      // Fetch payments
+      const paymentResponse = await axios.get(
+        "http://localhost:5000/api/payments/my-payments",
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const fetchedPayments = paymentResponse.data.data;
+
+      // Filter active bookings (confirmed, within rental period)
+      const activeBookings = fetchedBookings.filter((booking) => {
+        const start = new Date(booking.startDate);
+        const end = new Date(booking.endDate);
+        return (
+          booking.status === "confirmed" &&
+          start <= currentDate &&
+          end >= startOfMonth(currentDate)
+        );
+      });
+
+      // Calculate monthly rent and payment status
+      let total = 0;
+      const bookingsWithRent = activeBookings.map((booking) => {
+        const months =
+          differenceInMonths(
+            new Date(booking.endDate),
+            new Date(booking.startDate)
+          ) || 1;
+        const oneTimeFees = 195 + (booking.securityDeposit || 0); // Service fee ($120) + Cleaning fee ($75)
+        const monthlyRent = (booking.totalAmount - oneTimeFees) / months;
+
+        // Check payment for current month
+        const currentPayment = fetchedPayments.find(
+          (p) =>
+            p.booking.toString() === booking._id.toString() &&
+            p.month === currentMonthStr
+        );
+        const isCurrentPaid =
+          currentPayment && currentPayment.status === "completed";
+
+        // If current month is paid, check next month
+        let paymentMonth = currentMonthStr;
+        let paymentStatus = isCurrentPaid ? "completed" : "pending";
+        if (isCurrentPaid) {
+          const nextMonthStr = format(addMonths(currentDate, 1), "yyyy-MM");
+          const nextPayment = fetchedPayments.find(
+            (p) =>
+              p.booking.toString() === booking._id.toString() &&
+              p.month === nextMonthStr
+          );
+          paymentMonth = nextMonthStr;
+          paymentStatus =
+            nextPayment && nextPayment.status === "completed"
+              ? "completed"
+              : "pending";
+        }
+
+        if (!isCurrentPaid || (isCurrentPaid && paymentStatus === "pending")) {
+          total += monthlyRent;
+        }
+
+        return {
+          ...booking,
+          monthlyRent,
+          paymentStatus,
+          paymentMonth,
+        };
+      });
+
+      setBookings(bookingsWithRent);
+      setPayments(fetchedPayments);
+      setTotalDue(total);
+
+      // Set due date and progress
+      setDueDate(calculatedDueDate);
+      const daysUntilDue = Math.max(
+        0,
+        Math.ceil((calculatedDueDate - currentDate) / (1000 * 60 * 60 * 24))
+      );
+      const progressValue = ((30 - daysUntilDue) / 30) * 100;
+      setProgress(progressValue);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Initiate eSewa payment for a specific booking's monthly rent
+  const initiatePayment = async (booking) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/payments/create",
+        {
+          bookingId: booking._id,
+          month: booking.paymentMonth,
+          amount: booking.monthlyRent,
+        },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const { paymentUrl, paymentData } = response.data;
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = paymentUrl;
+      Object.entries(paymentData).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to initiate payment"
+      );
+    }
+  };
+
+  // Terminate a booking
+  const terminateBooking = async (bookingId) => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/bookings/terminate",
+        { bookingId },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      toast.success("Booking terminated successfully");
+      fetchData(); // Refresh bookings
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to terminate booking"
+      );
+    }
+  };
+
+  // Filter payment history (completed payments)
+  const paymentHistory = payments
+    .filter((p) => p.status === "completed")
+    .map((p) => {
+      const booking = bookings.find(
+        (b) => b._id.toString() === p.booking.toString()
+      );
+      return {
+        id: p._id,
+        date: format(new Date(p.createdAt), "yyyy-MM-dd"),
+        amount: p.amount,
+        status: "Paid",
+        propertyTitle: booking ? booking.property.title : "Unknown Property",
+      };
+    });
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Column - Payment Summary */}
+        {/* Left Column - Rent Payments */}
         <div className="lg:w-2/3 space-y-6">
           <Card className="shadow-none">
             <CardHeader>
-              <CardTitle>Current Payment</CardTitle>
-              <CardDescription>Your rent for November 2023</CardDescription>
+              <CardTitle>Current Rent Payments</CardTitle>
+              <CardDescription>
+                Your rent for {format(new Date(currentMonthStr), "MMMM yyyy")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Rent Amount</span>
-                  <span className="font-medium">$1,200.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Utilities</span>
-                  <span className="font-medium">$85.50</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Late Fee</span>
-                  <span className="font-medium">$0.00</span>
-                </div>
+                {loading ? (
+                  <p className="text-sm text-gray-600">Loading bookings...</p>
+                ) : bookings.length === 0 ? (
+                  <p className="text-sm text-gray-600">
+                    No active bookings for{" "}
+                    {format(new Date(currentMonthStr), "MMMM yyyy")}.
+                  </p>
+                ) : (
+                  bookings.map((booking) => (
+                    <div
+                      key={booking._id}
+                      className="flex flex-col sm:flex-row items-start bg-white dark:bg-[#0f172b] border rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
+                    >
+                      <img
+                        src={
+                          booking.property.images?.[0].url ||
+                          "/placeholder-property.jpg"
+                        }
+                        alt={`${booking.property.title} thumbnail`}
+                        className="w-full sm:w-24 h-16 object-cover rounded-md mb-4 sm:mb-0 sm:mr-4"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          {booking.property.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Booking ID: {booking._id}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Check-in: {format(new Date(booking.startDate), "PPP")}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Check-out: {format(new Date(booking.endDate), "PPP")}
+                        </div>
+                        <div className="text-sm font-medium">
+                          Rent Due: NPR {booking.monthlyRent.toFixed(2)}
+                        </div>
+                        <div className="text-sm">
+                          Month:{" "}
+                          {format(new Date(booking.paymentMonth), "MMMM yyyy")}
+                        </div>
+                        <div className="text-sm">
+                          Status:{" "}
+                          <Badge>
+                            {booking.paymentStatus === "completed"
+                              ? "Paid"
+                              : "Unpaid"}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="mt-4 sm:mt-0 sm:ml-4 flex flex-col gap-2">
+                        {booking.paymentStatus === "pending" && (
+                          <Button
+                            onClick={() => initiatePayment(booking)}
+                            disabled={loading}
+                          >
+                            Pay Now
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          onClick={() => terminateBooking(booking._id)}
+                          disabled={loading}
+                        >
+                          Terminate Booking
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total Due</span>
-                  <span>$1,285.50</span>
+                  <span>NPR {totalDue.toFixed(2)}</span>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row gap-4">
-              <Button className="w-full sm:w-auto">Pay Now</Button>
-              <Button variant="outline" className="w-full sm:w-auto">
-                Download Invoice
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Stripe Payment Method */}
-          <Card className="shadow-none">
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-              <CardDescription>Secure payment via Stripe</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* <Elements stripe={stripePromise}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <CreditCard className="h-6 w-6 text-primary" />
-                      <span>Secure Stripe Payment</span>
-                    </div>
-                  </div>
-
-                  <PaymentElement
-                    options={{
-                      layout: "tabs",
-                    }}
-                  />
-
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit">Pay $1,285.50</Button>
-                  </div>
-                </form>
-              </Elements> */}
             </CardContent>
           </Card>
         </div>
@@ -135,9 +336,11 @@ const Billing = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center text-center space-y-4">
-                <div className="text-4xl font-bold">7</div>
+                <div className="text-4xl font-bold">
+                  {Math.ceil((dueDate - currentDate) / (1000 * 60 * 60 * 24))}
+                </div>
                 <div className="text-muted-foreground">days remaining</div>
-                <Progress value={70} className="h-2" />
+                <Progress value={progress} className="h-2" />
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -166,7 +369,7 @@ const Billing = () => {
           <Card className="shadow-none">
             <CardHeader>
               <CardTitle>Payment History</CardTitle>
-              <CardDescription>Your recent payments</CardDescription>
+              <CardDescription>Your recent rent payments</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {paymentHistory.slice(0, 3).map((payment) => (
@@ -175,13 +378,13 @@ const Billing = () => {
                   className="flex items-center justify-between"
                 >
                   <div>
-                    <div className="font-medium">{payment.date}</div>
+                    <div className="font-medium">{payment.propertyTitle}</div>
                     <div className="text-sm text-muted-foreground">
-                      Rent payment
+                      {payment.date}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="font-medium">${payment.amount}</div>
+                    <div className="font-medium">NPR {payment.amount}</div>
                     <Badge variant="outline">{payment.status}</Badge>
                   </div>
                 </div>
@@ -205,13 +408,17 @@ const Billing = () => {
                         className="flex items-center justify-between p-3 border rounded-lg"
                       >
                         <div>
-                          <div className="font-medium">{payment.date}</div>
+                          <div className="font-medium">
+                            {payment.propertyTitle}
+                          </div>
                           <div className="text-sm text-muted-foreground">
-                            Rent payment
+                            {payment.date}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="font-medium">${payment.amount}</div>
+                          <div className="font-medium">
+                            NPR {payment.amount}
+                          </div>
                           <Badge variant="outline">{payment.status}</Badge>
                         </div>
                       </div>

@@ -736,7 +736,6 @@ export const deleteImage = catchAsyncError(async (req, res, next) => {
 // @route   GET /api/properties/host/:userId
 // @access  Public
 export const getPropertiesByHost = catchAsyncError(async (req, res, next) => {
-  console.log(req.params.userId);
   const properties = await Property.find({ host: req.params.userId }).populate(
     "host",
     "name email phone profilePicture"

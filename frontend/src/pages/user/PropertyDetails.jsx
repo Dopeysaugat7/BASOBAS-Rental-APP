@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Form, useParams } from "react-router-dom";
+import { Form, useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -55,7 +55,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -78,19 +78,147 @@ import { Textarea } from "@/components/ui/textarea";
 const PropertyDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [openCheckout, setOpenCheckout] = useState(false);
   const [openVisitDialog, setOpenVisitDialog] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   let { data: property, isLoading, isError } = useProperty(id);
   property = property?.property;
 
   const isOwner = user && property && user._id === property.host._id;
 
-  // Fix for default marker icons in Next.js/React
+  // Check if property is in favorites
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (user) {
+        try {
+          const res = await axios.get("http://localhost:5000/api/favorites", {
+            withCredentials: true,
+          });
+          const favorites = res.data.data;
+          setIsFavorite(favorites.some((fav) => fav._id === id));
+        } catch (error) {
+          console.error("Error checking favorites:", error);
+        }
+      }
+    };
+    checkFavorite();
+  }, [user, id]);
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      toast.error("Please log in to add to favorites");
+      return;
+    }
+
+    try {
+      const endpoint = isFavorite ? "/remove" : "/add";
+      await axios.post(
+        `http://localhost:5000/api/favorites${endpoint}`,
+        { propertyId: id },
+        { withCredentials: true }
+      );
+      setIsFavorite(!isFavorite);
+      toast.success(
+        isFavorite ? "Removed from favorites" : "Added to favorites"
+      );
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update favorites"
+      );
+    }
+  };
+
+  // Booking form
+  const bookingForm = useForm({
+    defaultValues: {
+      startDate: "",
+      endDate: "",
+    },
+  });
+
+  const onSubmitBooking = async (data) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/bookings/book",
+        {
+          propertyId: id,
+          startDate: data.startDate,
+          endDate: data.endDate,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      const { paymentUrl, paymentData } = res.data;
+
+      // Create form for eSewa redirect
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = paymentUrl;
+
+      Object.entries(paymentData).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+      setOpenCheckout(false);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to initiate booking"
+      );
+    }
+  };
+
+  // Visit form
+  const visitForm = useForm({
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      date: "",
+      message: "",
+    },
+  });
+
+  const onSubmitVisit = async (data) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/visits/book",
+        {
+          propertyId: id,
+          ...data,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      toast.success(res.data.message);
+      setOpenVisitDialog(false);
+      visitForm.reset();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send visit request"
+      );
+    }
+  };
+
+  // Fix for default marker icons
   const DefaultIcon = L.icon({
     iconUrl: "/marker-icon.png",
     iconRetinaUrl: "/marker-icon-2x.png",
-    // shadowUrl: "/images/marker-shadow.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -101,49 +229,7 @@ const PropertyDetails = () => {
   const nightMode = {
     url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
     attribution:
-      '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-  };
-
-  // Add this form hook
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      date: "",
-      message: "",
-    },
-  });
-
-  // Add this function to handle visit booking
-  const onSubmitVisit = async (data) => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/visits/book",
-        {
-          propertyId: id,
-          ...data,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-
-      toast.success(res.data.message);
-      setOpenVisitDialog(false);
-      form.reset();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error.response?.data?.message || "Failed to send visit request",
-        variant: "destructive",
-      });
-      console.error("Error sending visit request:", error);
-    }
+      '© <a href="https://stadiamaps.com/">Stadia Maps</a>, © <a href="https://openmaptiles.org/">OpenMapTiles</a> © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
   };
 
   if (isLoading) {
@@ -201,8 +287,12 @@ const PropertyDetails = () => {
             <Button variant="ghost" size="icon">
               <Share2 className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <Heart className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={handleFavoriteToggle}>
+              <Heart
+                className={`h-5 w-5 ${
+                  isFavorite ? "fill-current text-red-500" : ""
+                }`}
+              />
             </Button>
           </div>
         </div>
@@ -463,8 +553,6 @@ const PropertyDetails = () => {
                     <TileLayer
                       url={nightMode.url}
                       attribution={nightMode.attribution}
-                      // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      // url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Marker position={property.address.coordinates}>
                       <Popup>
@@ -497,7 +585,7 @@ const PropertyDetails = () => {
 
                 <Button variant="outline" className="mt-3 sm:mt-0" asChild>
                   <a
-                    href={`https://www.openstreetmap.org/?mlat=${property.address.coordinates.lat}&mlon=${property.address.coordinates.lng}#map=17/${property.address.coordinates.lat}}/${property.address.coordinates.lng}`}
+                    href={`https://www.openstreetmap.org/?mlat=${property.address.coordinates.lat}&mlon=${property.address.coordinates.lng}#map=17/${property.address.coordinates.lat}/${property.address.coordinates.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -516,7 +604,7 @@ const PropertyDetails = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-2xl font-bold">
-                      ${property.pricePerMonth}
+                      NPR {property.pricePerMonth}
                       <span className="text-base font-normal text-muted-foreground">
                         {" "}
                         / month
@@ -524,7 +612,7 @@ const PropertyDetails = () => {
                     </p>
                     {property.pricePerDay > 0 && (
                       <p className="text-sm text-muted-foreground">
-                        ${property.pricePerDay} / day
+                        NPR {property.pricePerDay} / day
                       </p>
                     )}
                   </div>
@@ -559,11 +647,19 @@ const PropertyDetails = () => {
                 <div className="block space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Rent</span>
-                    <span>${property.pricePerMonth}</span>
+                    <span>NPR {property.pricePerMonth}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Deposit</span>
-                    <span>${property.securityDeposit || "0"}</span>
+                    <span>NPR {property.securityDeposit || "0"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Service fee</span>
+                    <span>NPR 120</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cleaning fee</span>
+                    <span>NPR 75</span>
                   </div>
                 </div>
 
@@ -572,7 +668,11 @@ const PropertyDetails = () => {
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
                   <span>
-                    ${property.pricePerMonth + (property.securityDeposit || 0)}
+                    NPR{" "}
+                    {property.pricePerMonth +
+                      (property.securityDeposit || 0) +
+                      120 +
+                      75}
                   </span>
                 </div>
               </CardContent>
@@ -580,112 +680,132 @@ const PropertyDetails = () => {
               <CardFooter className="flex flex-col gap-4">
                 <Dialog open={openCheckout} onOpenChange={setOpenCheckout}>
                   <DialogTrigger asChild>
-                    <Button size="lg" className="w-full">
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      disabled={isOwner || !property.isAvailable}
+                    >
                       Rent this property
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="w-[90vw] max-w-md sm:w-full md:max-w-xl lg:max-w-2xl ">
+                  <DialogContent className="w-[90vw] max-w-md sm:w-full md:max-w-xl lg:max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Complete your Renting Process</DialogTitle>
                     </DialogHeader>
                     <ScrollArea className="h-[56vh] md:h-[500px] pr-4">
-                      <div className="space-y-6 p-1 sm:p-2 md:p-4">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-lg text-center lg:text-left">
-                            Your Property
-                          </h3>
-                          <div className="grid grid-cols-2 gap-4 p-3 sm:p-4 bg-muted/5 rounded-lg">
-                            <div className="space-y-1 text-center">
-                              <p className="text-sm text-muted-foreground">
-                                Check-in
-                              </p>
-                              <p className="font-medium">
-                                {format(
-                                  new Date(property.availableFrom),
-                                  "MMM d, yyyy"
-                                )}
-                              </p>
-                            </div>
-                            <div className="space-y-1 text-center">
-                              <p className="text-sm text-muted-foreground">
-                                Check-out
-                              </p>
-                              <p className="font-medium">
-                                {format(
-                                  new Date(
-                                    new Date(property.availableFrom).setMonth(
-                                      new Date(
-                                        property.availableFrom
-                                      ).getMonth() + property.minimumStayMonths
-                                    )
-                                  ),
-                                  "MMM d, yyyy"
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-lg">
-                            Price details
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground text-sm sm:text-base">
-                                ${property.pricePerMonth} x{" "}
-                                {property.minimumStayMonths} months
-                              </span>
-                              <span className="text-sm sm:text-base">
-                                $
-                                {property.pricePerMonth *
-                                  property.minimumStayMonths}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground text-sm sm:text-base">
-                                Security deposit
-                              </span>
-                              <span className="text-sm sm:text-base">
-                                ${property.securityDeposit || "0"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground text-sm sm:text-base">
-                                Service fee
-                              </span>
-                              <span className="text-sm sm:text-base">$120</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground text-sm sm:text-base">
-                                Cleaning fee
-                              </span>
-                              <span className="text-sm sm:text-base">$75</span>
-                            </div>
-                          </div>
-
-                          <Separator />
-
-                          <div className="flex justify-between font-semibold text-base sm:text-lg">
-                            <span>Total</span>
-                            <span>
-                              $
-                              {property.pricePerMonth *
-                                property.minimumStayMonths +
-                                (property.securityDeposit || 0) +
-                                120 +
-                                75}
-                            </span>
-                          </div>
-                        </div>
-
-                        <Button
-                          size="lg"
-                          className="w-full text-sm sm:text-base"
+                      <FormProvider {...bookingForm}>
+                        <form
+                          onSubmit={bookingForm.handleSubmit(onSubmitBooking)}
+                          className="space-y-6 p-1 sm:p-2 md:p-4"
                         >
-                          Confirm and pay
-                        </Button>
-                      </div>
+                          <div className="space-y-2">
+                            <h3 className="font-semibold text-lg text-center lg:text-left">
+                              Your Property
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4 p-3 sm:p-4 bg-muted/5 rounded-lg">
+                              <FormField
+                                control={bookingForm.control}
+                                name="startDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Check-in</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="date"
+                                        min={
+                                          new Date(property.availableFrom)
+                                            .toISOString()
+                                            .split("T")[0]
+                                        }
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={bookingForm.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Check-out</FormLabel>
+                                    <FormControl>
+                                      <Input type="date" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-lg">
+                              Price details
+                            </h3>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground text-sm sm:text-base">
+                                  NPR {property.pricePerMonth} x{" "}
+                                  {property.minimumStayMonths} months
+                                </span>
+                                <span className="text-sm sm:text-base">
+                                  NPR{" "}
+                                  {property.pricePerMonth *
+                                    property.minimumStayMonths}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground text-sm sm:text-base">
+                                  Security deposit
+                                </span>
+                                <span className="text-sm sm:text-base">
+                                  NPR {property.securityDeposit || "0"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground text-sm sm:text-base">
+                                  Service fee
+                                </span>
+                                <span className="text-sm sm:text-base">
+                                  NPR 120
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground text-sm sm:text-base">
+                                  Cleaning fee
+                                </span>
+                                <span className="text-sm sm:text-base">
+                                  NPR 75
+                                </span>
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex justify-between font-semibold text-base sm:text-lg">
+                              <span>Total</span>
+                              <span>
+                                NPR{" "}
+                                {property.pricePerMonth *
+                                  property.minimumStayMonths +
+                                  (property.securityDeposit || 0) +
+                                  120 +
+                                  75}
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="submit"
+                            size="lg"
+                            className="w-full text-sm sm:text-base"
+                          >
+                            Proceed to Payment
+                          </Button>
+                        </form>
+                      </FormProvider>
                     </ScrollArea>
                   </DialogContent>
                 </Dialog>
@@ -694,7 +814,12 @@ const PropertyDetails = () => {
                   onOpenChange={setOpenVisitDialog}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="lg" className="w-full">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      disabled={isOwner}
+                    >
                       Book a Visit
                     </Button>
                   </DialogTrigger>
@@ -702,13 +827,13 @@ const PropertyDetails = () => {
                     <DialogHeader>
                       <DialogTitle>Schedule a Property Visit</DialogTitle>
                     </DialogHeader>
-                    <FormProvider {...form}>
+                    <FormProvider {...visitForm}>
                       <form
-                        onSubmit={form.handleSubmit(onSubmitVisit)}
+                        onSubmit={visitForm.handleSubmit(onSubmitVisit)}
                         className="space-y-4"
                       >
                         <FormField
-                          control={form.control}
+                          control={visitForm.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
@@ -721,7 +846,7 @@ const PropertyDetails = () => {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={visitForm.control}
                           name="email"
                           render={({ field }) => (
                             <FormItem>
@@ -738,7 +863,7 @@ const PropertyDetails = () => {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={visitForm.control}
                           name="phone"
                           render={({ field }) => (
                             <FormItem>
@@ -754,7 +879,7 @@ const PropertyDetails = () => {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={visitForm.control}
                           name="date"
                           render={({ field }) => (
                             <FormItem>
@@ -767,7 +892,7 @@ const PropertyDetails = () => {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={visitForm.control}
                           name="message"
                           render={({ field }) => (
                             <FormItem>
@@ -809,7 +934,7 @@ const PropertyDetails = () => {
                   <Users className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-medium">Property Manager</p>
+                  <p className="font-medium">{property.host.name}</p>
                   <p className="text-sm text-muted-foreground">Verified</p>
                 </div>
               </CardContent>

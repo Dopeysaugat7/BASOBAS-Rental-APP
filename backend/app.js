@@ -8,6 +8,9 @@ import userRouter from "./routes/userRouter.js";
 import superAdminRouter from "./routes/superAdminRouter.js";
 import propertyRouter from "./routes/propertyRouter.js";
 import visitRouter from "./routes/visitRouter.js";
+import bookingRouter from "./routes/bookingRouter.js";
+import favoritesRouter from "./routes/favoriteRouter.js";
+import paymentRouter from "./routes/paymentRouter.js";
 import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 import path from "path";
 
@@ -35,6 +38,9 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/superadmin", superAdminRouter);
 app.use("/api/properties", propertyRouter);
 app.use("/api/visits", visitRouter);
+app.use("/api/bookings", bookingRouter);
+app.use("/api/favorites", favoritesRouter);
+app.use("/api/payments", paymentRouter);
 
 // removeUnverifiedAccounts();
 connectDB();

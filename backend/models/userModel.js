@@ -78,6 +78,12 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+  favorites: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+    },
+  ],
   accountVerified: {
     type: Boolean,
     default: false,

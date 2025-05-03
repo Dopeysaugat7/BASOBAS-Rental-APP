@@ -215,24 +215,18 @@ const propertySchema = new Schema({
     type: Number,
     default: 1,
   }, // Min rental duration
-
-  // Admin Approval System
-  // approvalStatus: {
-  //   type: String,
-  //   enum: ["pending", "approved", "rejected"],
-  //   default: "pending",
-  // },
-  // approvedBy: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "User",
-  // },
-  // approvedAt: {
-  //   type: Date,
-  // },
-  // rejectionReason: {
-  //   type: String,
-  //   maxlength: 500,
-  // },
+  // Add to propertySchema
+  bookings: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+    },
+  ],
+  isBooked: {
+    type: Boolean,
+    default: false,
+  },
+  nextAvailableDate: Date,
 
   // Property Expiry
   expiryDate: {
