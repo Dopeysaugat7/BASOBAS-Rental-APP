@@ -143,7 +143,7 @@ const MyProperties = () => {
           Active
         </Button>
         <Button
-          variant={filter === "expired" ? "default" : "outline"}
+          variant={filter === "expired" ? "destructive" : "outline"}
           onClick={() => setFilter("expired")}
           className="whitespace-nowrap px-4 py-2 text-sm"
         >
