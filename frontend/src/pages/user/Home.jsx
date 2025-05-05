@@ -144,7 +144,7 @@ export default function Home() {
       <FeaturedRentalsSection properties={properties} />
 
       {/* Testimonials */}
-      <TestimonialsSection testimonials={testimonials} />
+      {/* <TestimonialsSection testimonials={testimonials} /> */}
 
       {/* CTA Section */}
       <CTASection />

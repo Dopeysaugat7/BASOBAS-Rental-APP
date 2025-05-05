@@ -14,9 +14,10 @@ import {
   Moon,
   Settings,
   Plus,
+  LogIn,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -127,6 +128,7 @@ export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -227,12 +229,6 @@ export const Navbar = () => {
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
-                  {/* <Link to="/dashboard/settings">
-                    <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg px-2 py-2">
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
-                  </Link> */}
 
                   <DropdownMenuSeparator className="my-1" />
 
@@ -254,8 +250,29 @@ export const Navbar = () => {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator className="my-1" />
-
-                  <DropdownMenuItem
+                  {user ? (
+                    <DropdownMenuItem
+                      className="w-full gap-2 rounded-lg text-destructive hover:text-destructive"
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      className="cursor-pointer text-accent-foreground hover:text-primary gap-2 rounded-lg px-2 py-2"
+                      onClick={() => {
+                        navigate("/auth");
+                      }}
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Login
+                    </DropdownMenuItem>
+                  )}
+                  {/* <DropdownMenuItem
                     className="cursor-pointer text-destructive gap-2 rounded-lg px-2 py-2"
                     onClick={() => {
                       logout();
@@ -264,7 +281,7 @@ export const Navbar = () => {
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Log out</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </nav>
@@ -288,7 +305,7 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Enhanced Mobile Menu with Modern Design */}
+        {/* Mobile Menu with Modern Design */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -414,18 +431,32 @@ export const Navbar = () => {
                         )}
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full gap-2 rounded-lg text-destructive hover:text-destructive"
-                        onClick={() => {
-                          logout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </Button>
+                      {user ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2 rounded-lg text-destructive hover:text-destructive"
+                          onClick={() => {
+                            logout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Logout
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2 rounded-lg text-accent-foreground hover:text-primary"
+                          onClick={() => {
+                            navigate("/auth");
+                          }}
+                        >
+                          <LogIn className="h-4 w-4" />
+                          Login
+                        </Button>
+                      )}
                     </div>
                   </motion.div>
                 </nav>

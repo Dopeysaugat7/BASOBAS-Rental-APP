@@ -75,6 +75,9 @@ import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ChatButton } from "@/components/ChatButton";
+import { ChatWindow } from "@/components/ChatWindow";
+import { useChatContext } from "@/context/ChatProvider";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -82,10 +85,13 @@ const PropertyDetails = () => {
   const navigate = useNavigate();
   const [openCheckout, setOpenCheckout] = useState(false);
   const [openVisitDialog, setOpenVisitDialog] = useState(false);
+  const { startConversation, setIsChatOpen } = useChatContext();
+  const [error, setError] = useState(null);
 
   let { data: property, isLoading, isError } = useProperty(id);
   property = property?.property;
 
+  console.log("property", property);
   const isOwner = user && property && user._id === property.host._id;
 
   // Booking form
@@ -169,6 +175,31 @@ const PropertyDetails = () => {
       toast.error(
         error.response?.data?.message || "Failed to send visit request"
       );
+    }
+  };
+  // Start conversation with property owner
+  const handleMessageOwner = async () => {
+    if (!user) {
+      setError("Please log in to message the owner");
+      return;
+    }
+    if (!property?.host?._id) {
+      setError("No owner found for this property");
+      return;
+    }
+    if (property.host._id === user._id) {
+      setError("You cannot message yourself");
+      return;
+    }
+    try {
+      setError(null);
+      console.log("Starting conversation with owner:", property.host._id);
+      const conversation = await startConversation(property.host._id, id);
+      console.log("Conversation created:", conversation);
+      setIsChatOpen(true); // Open chat window
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+      setError("Failed to start conversation");
     }
   };
 
@@ -259,14 +290,6 @@ const PropertyDetails = () => {
                     {property.title}
                   </h1>
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span>4.8</span>
-                      <span className="text-muted-foreground">
-                        (24 reviews)
-                      </span>
-                    </div>
-                    <span>·</span>
                     <span className="text-muted-foreground">
                       {property.address.city}, {property.address.state}
                     </span>
@@ -876,23 +899,140 @@ const PropertyDetails = () => {
             </Card>
 
             {/* Host info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>About the host</CardTitle>
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl">About the host</CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                  <Users className="h-5 w-5 text-muted-foreground" />
+              <CardContent className="space-y-5">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                  <div className="h-14 w-14 rounded-full overflow-hidden border border-border flex-shrink-0">
+                    {property.host.profilePicture ? (
+                      <img
+                        src={property.host.profilePicture || "/placeholder.svg"}
+                        alt={property.host.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-secondary/50 flex items-center justify-center">
+                        <Users className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center sm:text-left space-y-2">
+                    <p className="font-medium text-xl">{property.host.name}</p>
+                    <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground">
+                      <span>
+                        Host since{" "}
+                        {new Date(
+                          property.host.createdAt || Date.now()
+                        ).getFullYear()}
+                      </span>
+                    </div>
+                    {/* <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-sm">
+                      <Badge variant="outline" className="font-normal">
+                        <Key className="h-3 w-3 mr-1" /> Verified
+                      </Badge>
+                    </div> */}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">{property.host.name}</p>
-                  <p className="text-sm text-muted-foreground">Verified</p>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h3 className="font-medium">Contact Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    {property.host.email && (
+                      <div className="flex items-center gap-2 p-2 rounded-md bg-secondary/30">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-primary"
+                          >
+                            <rect width="20" height="16" x="2" y="4" rx="2" />
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                          </svg>
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-xs text-muted-foreground">Email</p>
+                          <p className="truncate">{property.host.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {property.host.phone && (
+                      <div className="flex items-center gap-2 p-2 rounded-md bg-secondary/30">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-primary"
+                          >
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Phone</p>
+                          <p>{property.host.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-secondary/30">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Location
+                        </p>
+                        <p>
+                          {property.address.city}, {property.address.state}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-secondary/30">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Response Time
+                        </p>
+                        <p>Usually within 24 hours</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-medium">About</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {property.host.bio ||
+                      "Professional host dedicated to providing exceptional stays. Feel free to reach out with any questions about the property or neighborhood."}
+                  </p>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  Contact host
+              <CardFooter className="flex flex-col gap-3 pt-0">
+                <Button className="w-full" onClick={handleMessageOwner}>
+                  <span className="flex items-center gap-2">
+                    Message Host
+                    <MoveRight className="h-4 w-4" />
+                  </span>
                 </Button>
+                {error && <p className="text-destructive text-sm">{error}</p>}
               </CardFooter>
             </Card>
             {isOwner && (
@@ -904,6 +1044,8 @@ const PropertyDetails = () => {
           </div>
         </div>
       </div>
+      <ChatButton />
+      <ChatWindow />
     </div>
   );
 };

@@ -11,8 +11,11 @@ import visitRouter from "./routes/visitRouter.js";
 import bookingRouter from "./routes/bookingRouter.js";
 import favoritesRouter from "./routes/favoriteRouter.js";
 import paymentRouter from "./routes/paymentRouter.js";
+import chatRouter from "./routes/chatRouter.js";
 import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 import path from "path";
+import { createServer } from "http";
+import { initializeSocket } from "./socket.js";
 
 export const app = express();
 config({ path: "./config.env" });
@@ -24,6 +27,18 @@ app.use(
     credentials: true,
   })
 );
+
+// Create HTTP server
+const server = createServer(app);
+
+// Initialize Socket.IO
+const io = initializeSocket(server);
+
+// Make io instance available in routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -41,6 +56,7 @@ app.use("/api/visits", visitRouter);
 app.use("/api/bookings", bookingRouter);
 app.use("/api/favorites", favoritesRouter);
 app.use("/api/payments", paymentRouter);
+app.use("/api/chat", chatRouter);
 
 // removeUnverifiedAccounts();
 connectDB();
