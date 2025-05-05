@@ -34,58 +34,65 @@ import PropertyList from "./pages/user/PropertyList";
 import BookingSuccess from "./components/BookingSuccess";
 import BookingFaliure from "./components/BookingFaliure";
 import Favorites from "./pages/user/dashboard/Favorites";
+import { ChatProvider } from "./context/ChatProvider";
+import { useAuth } from "./context/AuthContext";
+import Message from "./pages/user/Message";
 
 function App() {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen">
       {/* <ThemeToggle /> */}
-      <Routes>
-        {/* Public Routes */}
-        <Route element={<LayoutWithNavbar />}>
-          <Route path="/" element={<Home />} />
-          <Route element={<ProtectedRoutes requireVerification={true} />}>
-            <Route path="/dashboard" element={<Userdashboard />}>
-              <Route path="" element={<Dashboard />} />
-              <Route path="profile" element={<UserProfile />} />
-              <Route path="add-property" element={<AddProperty />} />
-              <Route path="my-properties" element={<ActiveProperties />} />
-              <Route path="edit/:id" element={<EditProperty />} />
-              <Route path="billings" element={<Billing />} />
-              <Route path="favorites" element={<Favorites />} />
-              <Route path="Visit-logs" element={<VisitsDashboard />} />
+      <ChatProvider userId={user?._id}>
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<LayoutWithNavbar />}>
+            <Route path="/" element={<Home />} />
+            <Route element={<ProtectedRoutes requireVerification={true} />}>
+              <Route path="/dashboard" element={<Userdashboard />}>
+                <Route path="" element={<Dashboard />} />
+                <Route path="profile" element={<UserProfile />} />
+                <Route path="add-property" element={<AddProperty />} />
+                <Route path="my-properties" element={<ActiveProperties />} />
+                <Route path="edit/:id" element={<EditProperty />} />
+                <Route path="billings" element={<Billing />} />
+                <Route path="favorites" element={<Favorites />} />
+                <Route path="Visit-logs" element={<VisitsDashboard />} />
+              </Route>
             </Route>
+            <Route path="/messages" element={<Message />} />
+            <Route path="/:id" element={<PropertyDetails />} />
+            <Route path="/search" element={<SearchProperty />} />
+            <Route path="/properties" element={<PropertyList />} />
+            <Route path="/booking/success" element={<BookingSuccess />} />
+            <Route path="/booking/faliure" element={<BookingFaliure />} />
           </Route>
-          <Route path="/:id" element={<PropertyDetails />} />
-          <Route path="/search" element={<SearchProperty />} />
-          <Route path="/properties" element={<PropertyList />} />
-          <Route path="/booking/success" element={<BookingSuccess />} />
-          <Route path="/booking/faliure" element={<BookingFaliure />} />
-        </Route>
 
-        <Route path="/auth" element={<UserAuth />} />
-        <Route
-          path="otp-verification/:email/:phone"
-          element={<OtpVerification />}
-        />
-        <Route
-          path="/verification-prompt/:email/:phone"
-          element={<VerificationPrompt />}
-        />
-        <Route path="password/forgot" element={<ForgotPassword />} />
-        <Route path="password/reset/:token" element={<ResetPassword />} />
+          <Route path="/auth" element={<UserAuth />} />
+          <Route
+            path="otp-verification/:email/:phone"
+            element={<OtpVerification />}
+          />
+          <Route
+            path="/verification-prompt/:email/:phone"
+            element={<VerificationPrompt />}
+          />
+          <Route path="password/forgot" element={<ForgotPassword />} />
+          <Route path="password/reset/:token" element={<ResetPassword />} />
 
-        {/* Superadmin Routes */}
-        <Route path="/superadmin">
-          <Route path="login" element={<SuperadminLogin />} />
-          <Route path="signup" element={<SuperadminSignup />} />
-          <Route path="dashboard" element={<SuperadminDashboard />} />
-          <Route path="profile" element={<SuperadminProfile />} />
-        </Route>
+          {/* Superadmin Routes */}
+          <Route path="/superadmin">
+            <Route path="login" element={<SuperadminLogin />} />
+            <Route path="signup" element={<SuperadminSignup />} />
+            <Route path="dashboard" element={<SuperadminDashboard />} />
+            <Route path="profile" element={<SuperadminProfile />} />
+          </Route>
 
-        {/* 404 Not Found Route */}
-        <Route path="*" element={<ErrorPage />} />
-      </Routes>
-      <ToastContainer theme="colored" />
+          {/* 404 Not Found Route */}
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
+        <ToastContainer theme="colored" />
+      </ChatProvider>
     </div>
   );
 }
