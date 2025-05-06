@@ -12,6 +12,7 @@ import bookingRouter from "./routes/bookingRouter.js";
 import favoritesRouter from "./routes/favoriteRouter.js";
 import paymentRouter from "./routes/paymentRouter.js";
 import chatRouter from "./routes/chatRouter.js";
+import reviewRouter from "./routes/reviewRouter.js";
 import { removeUnverifiedAccounts } from "./automation/removeUnverifiedAccounts.js";
 import path from "path";
 import { createServer } from "http";
@@ -57,6 +58,7 @@ app.use("/api/bookings", bookingRouter);
 app.use("/api/favorites", favoritesRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/reviews", reviewRouter);
 
 // removeUnverifiedAccounts();
 connectDB();

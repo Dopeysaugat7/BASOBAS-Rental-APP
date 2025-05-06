@@ -286,12 +286,12 @@ const propertySchema = new Schema({
     min: 0,
     max: 5,
   },
-  // Reviews: [
-  //   {
-  //     type: Schema.Types.ObjectId,
-  //     ref: "Review",
-  //   },
-  // ],
+  reviews: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Review",
+    },
+  ],
 });
 
 // Update 'updatedAt' on save
