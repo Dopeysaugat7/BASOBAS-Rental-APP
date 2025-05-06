@@ -1,41 +1,70 @@
 import mongoose from "mongoose";
 
-const Schema = mongoose.Schema;
-const reviewSchema = new Schema({
+const reviewSchema = new mongoose.Schema({
   property: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Property",
     required: true,
   },
   user: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  booking: {
-    type: Schema.Types.ObjectId,
-    ref: "Booking",
+  rating: {
+    type: Number,
     required: true,
+    min: 1,
+    max: 5,
   },
-
-  // Ratings (1-5)
-  overall: { type: Number, min: 1, max: 5, required: true },
-  cleanliness: { type: Number, min: 1, max: 5 },
-  amenities: { type: Number, min: 1, max: 5 },
-  location: { type: Number, min: 1, max: 5 },
-  ownerBehavior: { type: Number, min: 1, max: 5 },
-
-  // Feedback
-  comment: { type: String, maxlength: 1000 },
-  ownerReply: { type: String, maxlength: 1000 },
-
-  // System
-  createdAt: { type: Date, default: Date.now },
+  comment: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 1000,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Indexes
-reviewSchema.index({ property: 1 });
-reviewSchema.index({ user: 1 });
-reviewSchema.index({ booking: 1 }, { unique: true }); // 1 review per booking
+// Update updatedAt on save
+reviewSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Update property's averageRating after save
+reviewSchema.post("save", async function (doc) {
+  const Property = mongoose.model("Property");
+  const reviews = await mongoose
+    .model("Review")
+    .find({ property: doc.property });
+  const avgRating =
+    reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+  await Property.findByIdAndUpdate(doc.property, { averageRating: avgRating });
+});
+
+// Update property's averageRating after review removal
+reviewSchema.post("remove", async function (doc) {
+  const Property = mongoose.model("Property");
+  const reviews = await mongoose
+    .model("Review")
+    .find({ property: doc.property });
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+  await Property.findByIdAndUpdate(doc.property, { averageRating: avgRating });
+});
+
+// Indexes for faster queries
+reviewSchema.index({ property: 1, user: 1 }, { unique: true });
+reviewSchema.index({ property: 1, createdAt: -1 });
 
 export const Review = mongoose.model("Review", reviewSchema);
