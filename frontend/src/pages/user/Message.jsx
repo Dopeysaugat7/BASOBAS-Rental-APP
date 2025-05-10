@@ -38,6 +38,24 @@ const Message = () => {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Hide footer on mount and restore on unmount
+  useEffect(() => {
+    const footer = document.querySelector(".app-footer");
+    if (footer) {
+      footer.style.display = "none";
+    }
+    return () => {
+      if (footer) {
+        footer.style.display = "";
+      }
+    };
+  }, []);
+
   // Update showConversations when activeConversation changes
   useEffect(() => {
     if (isMobileView) {
@@ -121,7 +139,7 @@ const Message = () => {
   const recipient = activeConv?.participants.find((p) => p._id !== userId);
 
   return (
-    <div className="h-[93.5vh] flex flex-col bg-background font-monserrat">
+    <div className="min-h-[93.5vh] flex flex-col bg-background font-monserrat no-footer">
       {/* Flexible Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Conversation List - Only this scrolls */}
@@ -239,7 +257,8 @@ const Message = () => {
                 </h3>
               )}
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-secondary/50 dark:bg-secondary/20">
+            {/* Scrollable fixed */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-secondary/50 dark:bg-secondary/20 max-h-[calc(93.5vh-160px)]">
               {activeConversation ? (
                 messages.length > 0 ? (
                   messages.map((msg) => {
@@ -320,7 +339,6 @@ const Message = () => {
               )}
               <div ref={messagesEndRef} />
             </div>
-
             {/* Fixed Input Bar */}
             {activeConversation && (
               <div className="p-4 border-t border-border bg-card">

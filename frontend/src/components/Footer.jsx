@@ -12,7 +12,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t border-border bg-card text-card-foreground">
+    <footer className="w-full border-t border-border bg-card text-card-foreground app-footer">
       <div className="w-full py-8 sm:py-4">
         {/* Main footer content */}
         <div className=" max-w-[100vw] mx-auto">
