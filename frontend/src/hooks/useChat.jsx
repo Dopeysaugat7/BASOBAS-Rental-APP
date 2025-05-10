@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState, useCallback } from "react";
 import { connectSocket, getSocket, disconnectSocket } from "../lib/socket";
+import { toast } from "react-toastify";
 
 export const useChat = (userId) => {
   const [socket, setSocket] = useState(null);
@@ -16,9 +17,7 @@ export const useChat = (userId) => {
       console.log("Fetching conversations for user:", userId);
       const response = await fetch(
         `http://localhost:5000/api/chat/conversations`,
-        {
-          credentials: "include",
-        }
+        { credentials: "include" }
       );
       const data = await response.json();
       if (data.success) {
@@ -46,7 +45,6 @@ export const useChat = (userId) => {
           console.log("Messages fetched:", data.messages);
           setMessages(data.messages);
           setActiveConversation(conversationId);
-          // Reset unread count for this conversation
           setUnreadCount(
             (prev) =>
               prev -
@@ -78,9 +76,7 @@ export const useChat = (userId) => {
           `http://localhost:5000/api/chat/conversations/start`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ receiverId, propertyId }),
           }
@@ -90,10 +86,7 @@ export const useChat = (userId) => {
           console.log("Conversation started:", data.conversation);
           setConversations((prev) => {
             const exists = prev.find((c) => c._id === data.conversation._id);
-            if (exists) {
-              console.log("Conversation already exists in state");
-              return prev;
-            }
+            if (exists) return prev;
             return [data.conversation, ...prev];
           });
           setActiveConversation(data.conversation._id);
@@ -133,9 +126,14 @@ export const useChat = (userId) => {
           (response) => {
             if (response.success) {
               console.log("Message sent:", response.message);
-              // Add the sent message to messages if it's for the active conversation
               if (conversationId === activeConversation) {
-                setMessages((prev) => [...prev, response.message]);
+                setMessages((prev) => {
+                  // Avoid duplicates
+                  if (prev.some((msg) => msg._id === response.message._id)) {
+                    return prev;
+                  }
+                  return [...prev, response.message];
+                });
               }
               resolve(response.message);
             } else {
@@ -161,11 +159,15 @@ export const useChat = (userId) => {
 
         socket.on("newMessage", (message) => {
           console.log("Received new message:", message);
-          // Add message to messages if it belongs to the active conversation
           if (message.conversation === activeConversation) {
-            setMessages((prev) => [...prev, message]);
+            setMessages((prev) => {
+              // Avoid duplicates
+              if (prev.some((msg) => msg._id === message._id)) {
+                return prev;
+              }
+              return [...prev, message];
+            });
           }
-          // Update unread count for non-active conversations
           if (
             message.sender._id !== userId &&
             message.conversation !== activeConversation
@@ -190,6 +192,7 @@ export const useChat = (userId) => {
         });
       } catch (error) {
         console.error("Socket connection failed:", error);
+        toast.error("Failed to connect to chat. Please try again.");
       }
     };
 
@@ -207,7 +210,7 @@ export const useChat = (userId) => {
     }
   }, [userId, fetchConversations]);
 
-  // Compute unread count when conversations or messages change
+  // Compute unread count
   useEffect(() => {
     const count = conversations.reduce((total, conv) => {
       const lastMessage = conv.lastMessage;

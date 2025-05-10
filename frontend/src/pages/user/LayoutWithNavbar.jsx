@@ -7,7 +7,7 @@ const LayoutWithNavbar = () => {
     <>
       <Navbar />
       <Outlet /> {/* This renders the child routes */}
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 };
