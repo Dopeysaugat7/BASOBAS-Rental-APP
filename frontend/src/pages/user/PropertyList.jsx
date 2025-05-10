@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import {
   Star,
   Mountain,
+  HouseIcon,
   Building,
   Tent,
   Waves,
@@ -19,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -65,14 +66,8 @@ function PropertyCards({
           </Badge>
         </CardHeader>
         <CardContent className="p-4 md:py-0 flex-1">
-          {" "}
-          {/* Reduced padding */}
           <div className="flex items-start justify-between mb-1">
-            {" "}
-            {/* Reduced margin */}
             <h3 className="font-semibold text-base line-clamp-1 text-foreground dark:text-white">
-              {" "}
-              {/* Smaller font */}
               {title}
             </h3>
             <div className="flex items-center gap-1">
@@ -83,15 +78,10 @@ function PropertyCards({
             </div>
           </div>
           <p className="text-xs text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-2">
-            {" "}
-            {/* Smaller text and margin */}
-            <MapPin className="h-3 w-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />{" "}
-            {/* Smaller icon */}
+            <MapPin className="h-3 w-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />
             {location}
           </p>
           <div className="flex flex-wrap gap-1 mb-2">
-            {" "}
-            {/* Reduced gap and margin */}
             {amenities?.slice(0, 3).map((amenity, i) => (
               <span
                 key={i}
@@ -103,18 +93,13 @@ function PropertyCards({
           </div>
         </CardContent>
         <CardFooter className="p-4 pt-0 border-t border-muted dark:border-gray-700">
-          {" "}
-          {/* Reduced padding */}
           <div className="w-full flex justify-between items-center">
             <div>
               <span className="font-bold text-base text-foreground dark:text-white">
-                {" "}
-                {/* Smaller font */}
                 {currency} {price.toLocaleString()}
               </span>
               <span className="text-xs text-muted-foreground dark:text-gray-400">
-                {" "}
-                {/* Smaller text */} {unit}
+                {unit}
               </span>
             </div>
             <Button
@@ -135,19 +120,16 @@ function PropertyCards({
 // Categories data (mapped to backend propertyType enum)
 const categories = [
   { id: "all", name: "All", icon: Building },
-  { id: "House", name: "Houses", icon: Building },
-  { id: "Apartment", name: "Apartments", icon: Tent },
-  { id: "Penthouse", name: "Penthouse", icon: Mountain },
-  { id: "Villa", name: "Villas", icon: Waves },
+  { id: "House", name: "Houses", icon: HouseIcon },
+  { id: "Apartment", name: "Apartments", icon: Building },
+  { id: "Penthouse", name: "Penthouse", icon: Waves },
+  { id: "Villa", name: "Villas", icon: Mountain },
   { id: "Duplex", name: "Duplex", icon: Star },
 ];
 
-function CategoryTabs({ onCategoryChange }) {
-  const [activeCategory, setActiveCategory] = useState("all");
-
+function CategoryTabs({ activeCategory, onCategoryChange }) {
   const handleCategoryChange = (category) => {
-    setActiveCategory(category);
-    onCategoryChange(category === "all" ? null : category);
+    onCategoryChange(category === "all" ? "" : category);
   };
 
   return (
@@ -155,7 +137,7 @@ function CategoryTabs({ onCategoryChange }) {
       <div className="max-w-7xl lg:max-w-[90rem] mx-auto px-4 sm:px-6 py-4">
         <ScrollArea className="w-full">
           <Tabs
-            value={activeCategory}
+            value={activeCategory || "all"}
             onValueChange={handleCategoryChange}
             className="w-full"
           >
@@ -191,25 +173,30 @@ export default function PropertyList() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialCategory = queryParams.get("type") || "";
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory);
 
   // Fetch properties from backend
   useEffect(() => {
     const fetchProperties = async () => {
       try {
+        console.log("Fetching properties with propertyType:", categoryFilter);
         const response = await axios.get(`${API_BASE_URL}/properties`, {
           params: {
-            propertyType: categoryFilter || null,
+            propertyType: categoryFilter || undefined,
             isAvailable: true,
             isExpired: false,
             sort: "-createdAt",
             limit: 20,
           },
         });
-        setProperties(response.data.data);
+        console.log("API Response:", response.data);
+        setProperties(response.data.data || []);
       } catch (err) {
-        setError("Failed to load properties");
-        console.error(err);
+        setError("Failed to load properties: " + err.message);
+        console.error("API Error:", err);
       } finally {
         setLoading(false);
       }
@@ -229,16 +216,17 @@ export default function PropertyList() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 w-screen">
-      <CategoryTabs onCategoryChange={setCategoryFilter} />
+      <CategoryTabs
+        activeCategory={categoryFilter || "all"}
+        onCategoryChange={setCategoryFilter}
+      />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:max-w-[90rem]">
         {properties.length === 0 ? (
           <p className="text-center text-muted-foreground text-lg">
-            No properties found in this category.
+            No properties found for the selected category.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {" "}
-            {/* Reduced gap */}
             {properties.map((property) => (
               <PropertyCards
                 key={property._id}

@@ -1,8 +1,9 @@
+"use client";
+
 /* eslint-disable no-unused-vars */
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
-  Heart,
   Star,
   MapPin,
   HomeIcon,
@@ -11,8 +12,7 @@ import {
   Hotel,
   Waves,
   ChevronRight,
-  DollarSign,
-  Globe,
+  Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +42,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { locationImages } from "@/data/locationImages";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -58,10 +59,23 @@ export default function Home() {
     navigate("/search", { state: { searchParams } });
   };
 
-  const [properties, setProperties] = useState([]);
+  const [allProperties, setAllProperties] = useState([]);
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [counts, setCounts] = useState({
+    locations: {},
+    propertyTypes: {},
+  });
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const propertyTypes = [
+    { icon: <HomeIcon className="h-5 w-5" />, label: "House", count: 0 },
+    { icon: <Building className="h-5 w-5" />, label: "Apartment", count: 0 },
+    { icon: <Mountain className="h-5 w-5" />, label: "Villa", count: 0 },
+    { icon: <Trees className="h-5 w-5" />, label: "Duplex", count: 0 },
+    { icon: <Waves className="h-5 w-5" />, label: "Penthouse", count: 0 },
+  ];
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -69,15 +83,49 @@ export default function Home() {
         const response = await axios.get(`${API_BASE_URL}/properties`, {
           params: {
             sort: "-createdAt",
-            limit: 6,
             isAvailable: true,
             isExpired: false,
           },
         });
-        setProperties(response.data.data);
+        const fetchedProperties = response.data.data || [];
+        console.log("Fetched Properties:", fetchedProperties);
+
+        // Store all properties for counts
+        setAllProperties(fetchedProperties);
+
+        // Limit to 6 properties for featured rentals
+        setFeaturedProperties(fetchedProperties.slice(0, 6));
+
+        // Calculate counts for locations and property types
+        const locationCounts = fetchedProperties.reduce((acc, property) => {
+          const city = property.address?.city || "Unknown";
+          acc[city] = (acc[city] || 0) + 1;
+          return acc;
+        }, {});
+
+        const propertyTypeCounts = fetchedProperties.reduce((acc, property) => {
+          const type = property.propertyType;
+          acc[type] = (acc[type] || 0) + 1;
+          return acc;
+        }, {});
+
+        console.log("Location Counts:", locationCounts);
+        console.log("Property Type Counts:", propertyTypeCounts);
+
+        setCounts({
+          locations: locationCounts,
+          propertyTypes: propertyTypeCounts,
+        });
+
+        // Update propertyTypes with counts
+        const updatedPropertyTypes = propertyTypes.map((type) => ({
+          ...type,
+          count: propertyTypeCounts[type.label] || 0,
+        }));
+        setPropertyTypes(updatedPropertyTypes);
       } catch (err) {
-        setError("Failed to load properties");
-        console.error(err);
+        setError("Failed to load properties: " + err.message);
+        console.error("API Error:", err);
       } finally {
         setLoading(false);
       }
@@ -86,40 +134,7 @@ export default function Home() {
     fetchProperties();
   }, []);
 
-  const propertyTypes = [
-    { icon: <HomeIcon className="h-5 w-5" />, label: "Houses", count: 124 },
-    { icon: <Hotel className="h-5 w-5" />, label: "Apartments", count: 89 },
-    { icon: <Mountain className="h-5 w-5" />, label: "Cabins", count: 42 },
-    { icon: <Trees className="h-5 w-5" />, label: "Countryside", count: 36 },
-    { icon: <Waves className="h-5 w-5" />, label: "Beachfront", count: 28 },
-  ];
-
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      role: "Long-term Renter",
-      content:
-        "Renting a house in Pokhara for a few months was seamless, and the monthly rate was very reasonable!",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      role: "Business Tenant",
-      content:
-        "Found a perfect apartment in Kathmandu for my extended work stay. Great monthly pricing!",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      id: 3,
-      name: "Emma Rodriguez",
-      role: "Relocation Renter",
-      content:
-        "Rented a cabin in Chitwan for three months. The process was smooth, and the host was fantastic.",
-      avatar: "https://randomuser.me/api/portraits/women/66.jpg",
-    },
-  ];
+  const [propertyTypesState, setPropertyTypes] = useState(propertyTypes);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorDisplay message={error} />;
@@ -135,16 +150,22 @@ export default function Home() {
 
       {/* Property Types */}
       <PropertyTypesSection
-        propertyTypes={propertyTypes}
+        propertyTypes={propertyTypesState}
         setSearchParams={setSearchParams}
         searchParams={searchParams}
+        navigate={navigate}
+      />
+
+      {/* Popular Locations */}
+      <PopularLocationsSection
+        navigate={navigate}
+        setSearchParams={setSearchParams}
+        searchParams={searchParams}
+        counts={counts.locations}
       />
 
       {/* Featured Rentals */}
-      <FeaturedRentalsSection properties={properties} />
-
-      {/* Testimonials */}
-      {/* <TestimonialsSection testimonials={testimonials} /> */}
+      <FeaturedRentalsSection properties={featuredProperties} />
 
       {/* CTA Section */}
       <CTASection />
@@ -251,7 +272,7 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
                         setSearchParams({ ...searchParams, location: value })
                       }
                     >
-                      <SelectTrigger className="w-full pl-10 border border-gray-300 dark:border-gray-600 ">
+                      <SelectTrigger className="w-full pl-10 border border-gray-300 dark:border-gray-600">
                         <SelectValue placeholder="Select city" />
                       </SelectTrigger>
                       <SelectContent>
@@ -269,7 +290,7 @@ const HeroSection = ({ searchParams, setSearchParams, handleSearch }) => (
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Property Type
                   </label>
-                  <div className="relative ">
+                  <div className="relative">
                     <HomeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Select
                       value={searchParams.propertyType}
@@ -369,6 +390,7 @@ const PropertyTypesSection = ({
   propertyTypes,
   setSearchParams,
   searchParams,
+  navigate,
 }) => (
   <section className="py-12 md:pt-16 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
     <motion.div
@@ -386,16 +408,6 @@ const PropertyTypesSection = ({
           Traditional charm meets modern comfort
         </p>
       </div>
-      {/* <Button
-        variant="ghost"
-        className="text-primary hover:text-primary/80 font-medium transition-colors duration-300 text-sm md:text-base"
-        asChild
-      >
-        <Link to="/properties" className="flex items-center group">
-          View All
-          <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
-        </Link>
-      </Button> */}
     </motion.div>
 
     <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
@@ -413,14 +425,15 @@ const PropertyTypesSection = ({
             >
               <Card className="group overflow-hidden border border-border hover:border-primary transition-all duration-300 h-full hover:shadow-md py-0">
                 <Link
-                  to={`/properties?type=${type.label.toLowerCase()}`}
+                  to={`/properties?type=${type.label}`}
                   className="block p-4 md:p-6 text-center"
-                  onClick={() =>
+                  onClick={() => {
                     setSearchParams({
                       ...searchParams,
                       propertyType: type.label,
-                    })
-                  }
+                    });
+                    navigate(`/properties?type=${type.label}`);
+                  }}
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -439,7 +452,7 @@ const PropertyTypesSection = ({
                       variant="secondary"
                       className="bg-secondary/20 dark:bg-secondary/30 text-secondary-foreground group-hover:bg-primary group-hover:text-white transition-all duration-300 text-xs"
                     >
-                      {type.count}+ Properties
+                      {type.count} Properties
                     </Badge>
                   </motion.div>
                 </Link>
@@ -456,214 +469,318 @@ const PropertyTypesSection = ({
   </section>
 );
 
-const FeaturedRentalsSection = ({
-  properties,
-  isFavorite,
-  handleFavoriteToggle,
-}) => (
-  <section className="py-12 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-      className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4"
-    >
-      <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-          Featured <span className="text-primary">Nepali</span> Rentals
-        </h2>
-        <p className="text-gray-600 mt-2">
-          Handpicked traditional and modern homes
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        className="text-primary hover:text-primary/80 font-medium transition-colors duration-300 text-sm md:text-base"
-        asChild
-      >
-        <Link to="/properties" className="flex items-center group">
-          Browse All
-          <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
-        </Link>
-      </Button>
-    </motion.div>
+const PopularLocationsSection = ({
+  navigate,
+  setSearchParams,
+  searchParams,
+  counts,
+}) => {
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    <Carousel opts={{ align: "start" }} className="w-full">
-      <CarouselContent className="-ml-1 md:-ml-2">
-        {properties.map((property) => (
-          <CarouselItem
-            key={property._id}
-            className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 mb-4"
+  useEffect(() => {
+    const processLocations = () => {
+      try {
+        // Transform counts into locations array
+        const locationsArray = Object.entries(counts).map(
+          ([name, count], index) => {
+            // Assume average rating and views are not available in counts
+            // If needed, these would require processing allProperties
+            const avgRating = ""; // Placeholder, update if ratings are needed
+            const views = 0; // Placeholder, update if views are needed
+
+            return {
+              id: name.toLowerCase().replace(/\s+/g, "-"),
+              name,
+              image: locationImages[name] || "https://via.placeholder.com/300",
+              propertyCount: count,
+              rating: avgRating,
+              views,
+            };
+          }
+        );
+
+        console.log("Locations Array:", locationsArray);
+
+        // Sort by property count (most popular first)
+        locationsArray.sort((a, b) => b.propertyCount - a.propertyCount);
+
+        setLocations(locationsArray.slice(0, 4)); // Take top 4 locations
+      } catch (err) {
+        console.error("Error processing locations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    processLocations();
+  }, [counts]);
+
+  const handleLocationClick = (locationName) => {
+    setSearchParams({
+      ...searchParams,
+      location: locationName,
+    });
+    navigate("/search", {
+      state: { searchParams: { ...searchParams, location: locationName } },
+    });
+  };
+
+  if (loading)
+    return (
+      <div className="py-12 flex justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+
+  if (locations.length === 0) {
+    return (
+      <section className="py-12 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 md:mb-10 gap-4"
+        >
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+              Popular <span className="text-primary">Locations</span>
+            </h2>
+            <p className="text-gray-600 mt-2">
+              No locations found. Add properties to see popular locations.
+            </p>
+          </div>
+        </motion.div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-12 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 md:mb-10 gap-4"
+      >
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+            Popular <span className="text-primary">Locations</span>
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Discover the most sought-after areas in Nepal
+          </p>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {locations.map((location, index) => (
+          <motion.div
+            key={location.id}
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+            onClick={() => handleLocationClick(location.name)}
+            className="cursor-pointer"
           >
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col border border-border dark:border-gray-700 py-0">
-                <CardHeader className="p-0 relative">
+            <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 h-full p-0">
+              <motion.div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/20 to-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <motion.div
+                className="relative h-48 w-full overflow-hidden"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img
+                  src={location.image}
+                  alt={location.name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              </motion.div>
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 p-4 z-10 text-white"
+                initial={{ y: 0 }}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h3 className="text-xl font-bold mb-1 transition-all duration-300">
+                  {location.name}
+                </h3>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium transition-all duration-300">
+                    {location.propertyCount}{" "}
+                    {location.propertyCount === 1 ? "property" : "properties"}
+                  </span>
+                  <div className="flex items-center gap-1 transition-all duration-300">
+                    <Star className="h-4 w-4 fill-yellow-400 stroke-yellow-400" />
+                    <span>{location.rating || ""}</span>
+                  </div>
+                </div>
+              </motion.div>
+              <div className="absolute inset-0 rounded-lg pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const FeaturedRentalsSection = ({ properties }) => {
+  const [visibleProperties, setVisibleProperties] = useState(3);
+
+  const loadMore = () => {
+    setVisibleProperties((prev) => Math.min(prev + 3, properties.length));
+  };
+
+  return (
+    <section className="py-12 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4"
+      >
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+            Popular <span className="text-primary">Nepali</span> Rentals
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Highly rated properties our customers love
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          className="text-primary hover:text-primary/80 font-medium transition-colors duration-300 text-sm md:text-base"
+          asChild
+        >
+          <Link to="/properties" className="flex items-center group">
+            Browse All
+            <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </Button>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {properties.slice(0, visibleProperties).map((property) => (
+          <motion.div
+            key={property._id}
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col border border-border dark:border-gray-700 py-0">
+              <CardHeader className="p-0 relative">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.5 }}
+                  className="overflow-hidden"
+                >
+                  <img
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                    src={
+                      property.images[0]?.url ||
+                      "https://via.placeholder.com/300" ||
+                      "/placeholder.svg"
+                    }
+                    alt={property.title}
+                    loading="lazy"
+                  />
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-2 right-2"
+                >
+                  <FavoriteButton propertyId={property._id} />
+                </motion.div>
+                <Badge
+                  variant="secondary"
+                  className="absolute bottom-3 left-3 bg-background/90 dark:bg-gray-800/90 backdrop-blur-sm text-foreground dark:text-white text-[10px] md:text-xs"
+                >
+                  {property.propertyType}
+                </Badge>
+              </CardHeader>
+              <CardContent className="px-4 py-1 flex-1">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-base md:text-lg line-clamp-1 text-foreground dark:text-white">
+                    {property.title}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 md:h-3 md:w-3 fill-yellow-400 stroke-yellow-400" />
+                    <span className="font-medium text-base md:text-sm dark:text-white">
+                      {property.averageRating || "New"}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs md:text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-2">
+                  <MapPin className="h-3 w-3 md:h-3 md:w-3 flex-shrink-0" />
+                  {property.address.city}, {property.address.country}
+                </p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {property.amenities.slice(0, 3).map((amenity, i) => (
+                    <motion.span
+                      key={i}
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-[10px] px-1.5 py-0.5 bg-muted dark:bg-gray-700 rounded-full text-muted-foreground dark:text-gray-300 transition-colors duration-300 hover:bg-primary/10 dark:hover:bg-primary/20"
+                    >
+                      {amenity}
+                    </motion.span>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter className="p-4 pt-0 border-t border-border dark:border-gray-700">
+                <div className="w-full flex justify-between items-center">
+                  <div>
+                    <span className="font-bold text-base md:text-base text-foreground dark:text-white">
+                      ₨. {property.pricePerMonth}
+                    </span>
+                    <span className="text-xs md:text-sm text-muted-foreground dark:text-gray-400">
+                      /month
+                    </span>
+                  </div>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.5 }}
-                    className="overflow-hidden"
-                  >
-                    <img
-                      className="w-full h-36 sm:h-40 md:h-44 object-cover transition-transform duration-500 group-hover:scale-105"
-                      src={
-                        property.images[0]?.url ||
-                        "https://via.placeholder.com/300"
-                      }
-                      alt={property.title}
-                      loading="lazy"
-                    />
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-2 right-2"
                   >
-                    <FavoriteButton propertyId={property._id} />
-                  </motion.div>
-                  <Badge
-                    variant="secondary"
-                    className="absolute bottom-3 left-3 bg-background/90 dark:bg-gray-800/90 backdrop-blur-sm text-foreground dark:text-white text-[10px] md:text-xs"
-                  >
-                    {property.propertyType}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-2 md:p-3 flex-1">
-                  <div className="flex items-start justify-between mb-1">
-                    <h3 className="font-semibold text-base md:text-lg line-clamp-1 text-foreground dark:text-white">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 md:h-3 md:w-3 fill-yellow-400 stroke-yellow-400" />
-                      <span className="font-medium text-base md:text-sm dark:text-white">
-                        {property.averageRating || "New"}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1 mb-1 py-1">
-                    <MapPin className="h-3 w-3 md:h-3 md:w-3 flex-shrink-0" />
-                    {property.address.city}, {property.address.country}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {property.amenities.slice(0, 3).map((amenity, i) => (
-                      <motion.span
-                        key={i}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-[10px] px-1.5 py-0.5 bg-muted dark:bg-gray-700 rounded-full text-muted-foreground dark:text-gray-300 transition-colors duration-300 hover:bg-primary/10 dark:hover:bg-primary/20"
-                      >
-                        {amenity}
-                      </motion.span>
-                    ))}
-                  </div>
-                </CardContent>
-                <CardFooter className="p-2 md:p-3 pt-0 border-t border-border dark:border-gray-700">
-                  <div className="w-full flex justify-between items-center">
-                    <div>
-                      <span className="font-bold text-base md:text-base text-foreground dark:text-white">
-                        ₨. {property.pricePerMonth}
-                      </span>
-                      <span className="text-xs md:text-sm text-muted-foreground dark:text-gray-400">
-                        /month
-                      </span>
-                    </div>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
+                    <Button
+                      asChild
+                      variant="default"
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-xs h-7 md:text-sm"
                     >
-                      <Button
-                        asChild
-                        variant="default"
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90 text-xs h-7 md:text-sm"
-                      >
-                        <Link to={`/${property._id}`}>View Details</Link>
-                      </Button>
-                    </motion.div>
-                  </div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <div className="flex justify-center mt-4 md:mt-6 gap-2">
-        <CarouselPrevious className="relative inset-0 translate-y-0 bg-background dark:bg-gray-800 hover:bg-background/90 dark:hover:bg-gray-700 border-border dark:border-gray-600 h-7 w-7 md:h-8 md:w-8" />
-        <CarouselNext className="relative inset-0 translate-y-0 bg-background dark:bg-gray-800 hover:bg-background/90 dark:hover:bg-gray-700 border-border dark:border-gray-600 h-7 w-7 md:h-8 md:w-8" />
-      </div>
-    </Carousel>
-  </section>
-);
-
-const TestimonialsSection = ({ testimonials }) => (
-  <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto">
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-      className="text-center mb-8 md:mb-12"
-    >
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
-        What Our Clients Say
-      </h2>
-      <p className="text-sm md:text-base text-muted-foreground mt-2">
-        Trusted by thousands of happy customers
-      </p>
-    </motion.div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-      {testimonials.map((testimonial, index) => (
-        <motion.div
-          key={testimonial.id}
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          viewport={{ once: true }}
-          whileHover={{ y: -5 }}
-        >
-          <Card className="hover:shadow-md transition-all duration-300 h-full border border-border">
-            <CardContent className="p-4 md:p-6">
-              <div className="mb-3 md:mb-4 flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 md:h-5 md:w-5 fill-yellow-400 stroke-yellow-400"
-                  />
-                ))}
-              </div>
-              <p className="italic mb-4 md:mb-6 text-sm md:text-base text-muted-foreground">
-                "{testimonial.content}"
-              </p>
-              <div className="flex items-center gap-3 md:gap-4">
-                <Avatar className="h-10 w-10 md:h-12 md:w-12">
-                  <AvatarImage src={testimonial.avatar} />
-                  <AvatarFallback className="bg-muted">
-                    {testimonial.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-sm md:text-base text-foreground">
-                    {testimonial.name}
-                  </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    {testimonial.role}
-                  </p>
+                      <Link to={`/${property._id}`}>View Details</Link>
+                    </Button>
+                  </motion.div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
-    </div>
-  </section>
-);
+              </CardFooter>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {visibleProperties < properties.length && (
+        <div className="flex justify-center mt-8">
+          <Button
+            onClick={loadMore}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/5"
+          >
+            Load More
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+};
 
 const CTASection = () => (
   <section className="relative py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-[90vw] mx-auto mb-10 md:mb-15 rounded-lg overflow-hidden">
