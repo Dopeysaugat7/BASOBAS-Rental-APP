@@ -70,6 +70,8 @@ const AuthProvider = ({ children }) => {
     } finally {
       // Clear frontend state
       setUser(null);
+      setIsAuthenticated(false);
+      setNeedsVerification(false);
       localStorage.removeItem("user");
 
       // Remove cookie on client side (if needed)
@@ -77,7 +79,7 @@ const AuthProvider = ({ children }) => {
         "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 
       // Redirect
-      navigate("/auth");
+      navigate("/");
     }
   };
 

@@ -36,7 +36,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format, differenceInDays, addMonths } from "date-fns";
+import { format, addMonths, endOfMonth } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
@@ -104,12 +104,12 @@ const Dashboard = () => {
 
       // Process payments
       const fetchedPayments = paymentsRes.data?.data || [];
-      const currentMonthStr = format(currentDate, "yyyy-MM");
+      console.log(fetchedPayments);
       const totalPayments = fetchedPayments.reduce(
-        (sum, p) => (p.status === "completed" ? sum + (p.amount || 0) : sum),
+        (sum, p) => sum + (p.amount || 0),
         0
       );
-
+      console.log(totalPayments);
       // Process properties
       const fetchedProperties = propertiesRes.data?.data || [];
       const propertyStats = {
@@ -119,43 +119,58 @@ const Dashboard = () => {
         availableProperties: fetchedProperties.filter((p) => p.isAvailable)
           .length,
         pendingApprovals: fetchedProperties.filter(
-          (p) => p.approvalStatus === "pending"
+          (p) => p.approvalStatus === "active"
         ).length,
       };
 
       // Calculate revenue data
       const revenueData = [];
       for (let i = 5; i >= 0; i--) {
-        const month = addMonths(currentDate, -i);
-        const monthStr = format(month, "yyyy-MM");
-        const monthPayments = fetchedPayments.filter(
-          (p) => p.month === monthStr && p.status === "completed"
-        );
+        const month = addMonths(new Date(), -i);
+        const monthStart = format(month, "yyyy-MM-01");
+        const monthEnd = format(endOfMonth(month), "yyyy-MM-dd");
+
+        const monthPayments = fetchedPayments.filter((p) => {
+          const paymentDate = new Date(p.paymentDate || p.createdAt);
+          return (
+            paymentDate >= new Date(monthStart) &&
+            paymentDate <= new Date(monthEnd)
+          );
+        });
+
         const revenue = monthPayments.reduce(
           (sum, p) => sum + (p.amount || 0),
           0
         );
+
         revenueData.push({
           name: format(month, "MMM"),
           revenue,
         });
       }
-
+      console.log(revenueData);
       // Calculate occupancy data
       const occupancyData = [];
       for (let i = 5; i >= 0; i--) {
-        const month = addMonths(currentDate, -i);
-        const monthStr = format(month, "yyyy-MM");
-        const bookedMonths = activeBookings.filter((booking) => {
-          const start = new Date(booking.startDate);
-          const end = new Date(booking.endDate);
-          const monthDate = new Date(monthStr + "-01");
-          return start <= monthDate && end >= monthDate;
-        }).length;
+        const month = addMonths(new Date(), -i);
+        const monthStart = format(month, "yyyy-MM-01");
+        const monthEnd = format(endOfMonth(month), "yyyy-MM-dd");
+
+        const monthBookings = fetchedBookings.filter((booking) => {
+          const bookingStart = new Date(booking.startDate);
+          const bookingEnd = new Date(booking.endDate);
+          return (
+            bookingStart <= new Date(monthEnd) &&
+            bookingEnd >= new Date(monthStart) &&
+            booking.status === "confirmed"
+          );
+        });
+
         const rate =
-          activeBookings.length > 0
-            ? (bookedMonths / activeBookings.length) * 100
+          propertyStats.totalProperties > 0
+            ? (monthBookings.length / propertyStats.totalProperties) * 100
             : 0;
+
         occupancyData.push({
           name: format(month, "MMM"),
           rate: Math.round(rate),
@@ -170,11 +185,9 @@ const Dashboard = () => {
         totalBookings: fetchedBookings.length,
         activeBookings: activeBookings.length,
         totalPayments,
-        pendingPayments:
-          activeBookings.length -
-          fetchedPayments.filter(
-            (p) => p.month === currentMonthStr && p.status === "completed"
-          ).length,
+        pendingPayments: fetchedPayments.filter((p) => p.status !== "completed")
+          .length,
+
         ...propertyStats,
       });
       setRevenueData(revenueData);
@@ -187,10 +200,9 @@ const Dashboard = () => {
       }
     } finally {
       setDataLoading(false);
+      console.log("Data fetched successfully", stats);
     }
   };
-
-  // ... rest of your component code (terminateBooking, initiatePayment, etc.)
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
@@ -209,7 +221,7 @@ const Dashboard = () => {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
           <StatCard
             title="Total Properties"
             value={stats.totalProperties}
@@ -228,12 +240,12 @@ const Dashboard = () => {
             icon={<DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />}
             trend="neutral"
           />
-          <StatCard
+          {/* <StatCard
             title="Pending Approvals"
             value={stats.pendingApprovals}
             icon={<Clock className="h-4 w-4 sm:h-5 sm:w-5" />}
             trend="neutral"
-          />
+          /> */}
         </div>
 
         {/* Charts Row */}
@@ -265,7 +277,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No revenue data available
+                  {dataLoading ? "Loading..." : "No revenue data available"}
                 </div>
               )}
             </CardContent>
@@ -292,7 +304,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No occupancy data available
+                  {dataLoading ? "Loading..." : "No occupancy data available"}
                 </div>
               )}
             </CardContent>
@@ -337,7 +349,7 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/${property._id}`)}
+                        onClick={() => navigate(`/properties/${property._id}`)}
                       >
                         View
                       </Button>
@@ -348,7 +360,9 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  No properties listed yet
+                  {dataLoading
+                    ? "Loading properties..."
+                    : "No properties listed yet"}
                 </p>
                 <Button onClick={() => navigate("/properties/new")}>
                   Add Your First Property
@@ -394,7 +408,9 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No bookings yet</p>
+                <p className="text-muted-foreground">
+                  {dataLoading ? "Loading bookings..." : "No bookings yet"}
+                </p>
               </div>
             )}
           </CardContent>
@@ -406,6 +422,7 @@ const Dashboard = () => {
 
 // Reusable Stat Card Component
 const StatCard = ({ title, value, icon, trend, change }) => {
+  console.log("StatCard props:", { title, value, icon, trend, change });
   return (
     <Card>
       <CardHeader className="pb-2">
