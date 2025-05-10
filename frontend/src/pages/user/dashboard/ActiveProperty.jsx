@@ -154,31 +154,33 @@ const MyProperties = () => {
 
       {/* Properties grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card
+              key={i}
+              className="overflow-hidden border border-border/40 rounded-xl"
+            >
               <AspectRatio ratio={16 / 9}>
-                <Skeleton className="h-full w-full rounded-t-lg" />
+                <Skeleton className="h-full w-full" />
               </AspectRatio>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-5 space-y-4">
                 <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-5 w-1/2" />
                 <div className="flex gap-2 flex-wrap">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
                 </div>
                 <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+                <div className="pt-2">
+                  <Skeleton className="h-9 w-full rounded-full" />
+                </div>
               </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Skeleton className="h-9 w-full" />
-              </CardFooter>
             </Card>
           ))}
         </div>
       ) : filteredProperties.length === 0 ? (
-        <div className="p-8">
+        <div className="bg-muted/30 rounded-2xl p-10 border border-border/30">
           <EmptyState
             title={`No ${filter} properties found`}
             description={
@@ -189,11 +191,11 @@ const MyProperties = () => {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((property) => (
             <Card
               key={property._id}
-              className="overflow-hidden hover:shadow-md transition-shadow duration-200 group py-0"
+              className="overflow-hidden border border-border/40 rounded-xl hover:shadow-lg transition-all duration-300 group p-0"
             >
               <div className="relative">
                 <AspectRatio ratio={16 / 9}>
@@ -202,117 +204,143 @@ const MyProperties = () => {
                       <img
                         src={
                           property.images.find((img) => img.isPrimary)?.url ||
-                          property.images[0].url
+                          property.images[0].url ||
+                          "/placeholder.svg"
                         }
                         alt={property.title}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-500"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="h-full w-full bg-muted flex items-center justify-center">
-                        <Home className="h-10 w-10 text-muted-foreground" />
+                      <div className="h-full w-full bg-gradient-to-br from-muted/80 to-muted flex items-center justify-center">
+                        <Home className="h-12 w-12 text-muted-foreground/50" />
                       </div>
                     )}
                   </Link>
                 </AspectRatio>
+
                 <Badge
                   variant={property.isExpired ? "destructive" : "default"}
-                  className="absolute top-2 left-2"
+                  className={`absolute top-3 left-3 px-3 py-1 rounded-full shadow-sm ${
+                    property.isExpired
+                      ? "bg-destructive/90 backdrop-blur-sm text-white"
+                      : "bg-primary/90 backdrop-blur-sm"
+                  }`}
                 >
-                  {property.isExpired ? "Expired" : "Active"}
+                  {property.isExpired ? (
+                    <div className="flex items-center gap-1">
+                      <CalendarOff className="h-3 w-3" />
+                      <span>Expired</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      <span>Active</span>
+                    </div>
+                  )}
                 </Badge>
-                <div className="absolute top-2 right-2">
+
+                <div className="absolute top-3 right-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                        className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90 rounded-full shadow-sm"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem asChild>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-48 rounded-xl"
+                    >
+                      <DropdownMenuItem asChild className="py-2.5">
                         <Link
                           to={`/${property._id}`}
                           className="flex items-center gap-2 w-full"
                         >
                           <Eye className="h-4 w-4" />
-                          View
+                          View Property
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="py-2.5">
                         <Link
                           to={`/dashboard/edit/${property._id}`}
                           className="flex items-center gap-2 w-full"
                         >
                           <Edit className="h-4 w-4" />
-                          Edit
+                          Edit Property
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        className="text-destructive focus:text-destructive py-2.5"
                         onClick={() => handleDeleteClick(property._id)}
                         disabled={deleteProperty.isLoading}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
+                        Delete Property
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </div>
 
-              <CardContent className="p-4">
-                <div className="flex flex-col justify-between items-start gap-2">
-                  <Link to={`/${property._id}`} className="hover:underline">
-                    <CardTitle className="text-lg line-clamp-none">
-                      {property.title}
-                    </CardTitle>
-                  </Link>
-                  <div className="text-lg font-semibold whitespace-nowrap">
-                    ${property.pricePerMonth.toLocaleString()}
-                    <span className="text-sm font-normal text-muted-foreground">
+                <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-border/30">
+                  <div className="text-base font-medium">
+                    ₨. {property.pricePerMonth.toLocaleString()}
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
                       /month
                     </span>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4 mr-1.5" />
+              <CardContent className="p-5">
+                <Link
+                  to={`/${property._id}`}
+                  className="hover:underline block mb-2"
+                >
+                  <CardTitle className="text-lg line-clamp-1 font-medium">
+                    {property.title}
+                  </CardTitle>
+                </Link>
+
+                <div className="flex items-center text-sm text-muted-foreground mb-4">
+                  <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0" />
                   <span className="line-clamp-1">
                     {property.address.city}, {property.address.state}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <div className="flex items-center text-sm">
-                    <Bed className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span>{property.bhkConfiguration.bedrooms}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Bath className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span>{property.bhkConfiguration.bathrooms}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Ruler className="h-4 w-4 mr-1.5 text-muted-foreground" />
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <Badge
+                    variant="outline"
+                    className="bg-background border-border/50 rounded-full px-3 py-1 font-normal flex items-center gap-1.5"
+                  >
+                    <Bed className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{property.bhkConfiguration.bedrooms} Beds</span>
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-background border-border/50 rounded-full px-3 py-1 font-normal flex items-center gap-1.5"
+                  >
+                    <Bath className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{property.bhkConfiguration.bathrooms} Baths</span>
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-background border-border/50 rounded-full px-3 py-1 font-normal flex items-center gap-1.5"
+                  >
+                    <Ruler className="h-3.5 w-3.5 text-muted-foreground" />
                     <span>{property.area} sq.ft</span>
-                  </div>
+                  </Badge>
                 </div>
 
-                <Separator className="my-3" />
+                <Separator className="my-4" />
 
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                    <span className="text-sm">4.8</span>
-                    <span className="text-sm text-muted-foreground ml-1">
-                      (24)
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground flex items-center">
-                    <Calendar className="h-4 w-4 mr-1.5" />
+                  <div className="text-xs text-muted-foreground flex items-center bg-muted/50 px-2.5 py-1 rounded-full">
+                    <Calendar className="h-3.5 w-3.5 mr-1.5" />
                     {new Date(property.createdAt).toLocaleDateString()}
                   </div>
                 </div>
