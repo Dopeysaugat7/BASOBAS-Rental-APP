@@ -254,3 +254,23 @@ export const getUserPayments = catchAsyncError(async (req, res, next) => {
     data: payments,
   });
 });
+
+// Payment Check API
+export const checkPayment = catchAsyncError(async (req, res, next) => {
+  const { bookingId, month } = req.body;
+
+  if (!bookingId || !month) {
+    return next(new ErrorHandler("Booking ID and month are required", 400));
+  }
+
+  console.log("Checking payment:", { bookingId, month });
+  const existingPayment = await Payment.findOne({
+    booking: bookingId,
+    month,
+    status: "completed",
+  });
+
+  console.log("Existing Payment:", !existingPayment);
+
+  res.status(200).json({ isPaid: !!existingPayment });
+});
