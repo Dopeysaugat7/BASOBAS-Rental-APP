@@ -273,7 +273,7 @@ const PropertyDetails = () => {
           </Button>
 
           <div className="flex gap-2">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Share2 className="h-5 w-5" />

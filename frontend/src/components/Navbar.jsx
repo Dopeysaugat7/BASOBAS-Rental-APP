@@ -151,10 +151,11 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <img
-              src="/basobas-logo.png"
+              src="/logo.png"
               alt="Basobas Logo"
-              className="h-6 md:h-7 w-auto object-fit"
+              className="h-9 md:h-10 w-auto object-fit"
             />
+            <span className="text-2xl font-bold text-primary">Basobas</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -12,6 +12,7 @@ import {
   getPropertiesByHost,
   getPropertiesNearLocation,
   getPropertyVisits,
+  getPlatformStats,
 } from "../controllers/propertyController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import { uploadPropertyImages } from "../middlewares/fileupload.js";
@@ -20,6 +21,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllProperties);
+router.get("/platform-stats", getPlatformStats);
 router.get("/near/:zipcode/:distance", getPropertiesNearLocation);
 router.get("/:id", getProperty);
 router.get("/host/:userId", getPropertiesByHost);

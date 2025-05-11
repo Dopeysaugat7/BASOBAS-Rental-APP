@@ -728,11 +728,11 @@ export const UserProfile = () => {
                                 {formatAddress(booking.property.address)}
                               </p>
                             </div>
-                            <span
+                            {/* <span
                               className={`${status.color} text-xs font-medium px-2 py-1 rounded-full`}
                             >
                               {status.label}
-                            </span>
+                            </span> */}
                           </div>
                           <div className="mt-2 space-y-1">
                             <p className="text-sm">

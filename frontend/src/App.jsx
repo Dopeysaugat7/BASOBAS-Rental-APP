@@ -37,6 +37,10 @@ import Favorites from "./pages/user/dashboard/Favorites";
 import { ChatProvider } from "./context/ChatProvider";
 import { useAuth } from "./context/AuthContext";
 import Message from "./pages/user/Message";
+import AboutUs from "./pages/user/AboutUs";
+import TermsAndConditions from "./pages/user/TermsCondition";
+// import PrivacyPolicy from "./pages/user/PrivacyPolicy";
+// import CookiePolicy from "./pages/user/CookiePolicy";
 
 function App() {
   const { user } = useAuth();
@@ -66,6 +70,10 @@ function App() {
             <Route path="/properties" element={<PropertyList />} />
             <Route path="/booking/success" element={<BookingSuccess />} />
             <Route path="/booking/faliure" element={<BookingFaliure />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            {/* <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/cookies" element={<CookiePolicy />} /> */}
           </Route>
 
           <Route path="/auth" element={<UserAuth />} />

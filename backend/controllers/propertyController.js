@@ -1,5 +1,7 @@
 import { Property } from "../models/propertyModel.js";
 import { User } from "../models/userModel.js";
+import { Review } from "../models/reviewModel.js";
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -772,3 +774,60 @@ export const getPropertyVisits = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch visits" });
   }
 };
+
+export const getPlatformStats = catchAsyncError(async (req, res, next) => {
+  // Get total properties count
+  const totalProperties = await Property.countDocuments({
+    isActive: true,
+    isExpired: false,
+  });
+
+  // Get total booked properties (happy tenants)
+  const happyTenants = await Property.countDocuments({
+    isBooked: true,
+    isActive: true,
+  });
+
+  // Get unique cities covered
+  const citiesCovered = await Property.aggregate([
+    { $match: { isActive: true, isExpired: false } },
+    { $group: { _id: "$address.city" } },
+    { $count: "total" },
+  ]);
+
+  // Calculate average satisfaction rate from reviews
+  const satisfactionRate = await Review.aggregate([
+    {
+      $group: {
+        _id: null,
+        averageRating: { $avg: "$rating" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Get total hosts (property owners)
+  const totalHosts = await User.countDocuments({
+    properties: { $exists: true, $not: { $size: 0 } },
+  });
+
+  // Get total users
+  const totalUsers = await User.countDocuments();
+
+  // Format the stats
+  const stats = {
+    totalProperties,
+    happyTenants,
+    citiesCovered: citiesCovered[0]?.total || 0,
+    satisfactionRate: satisfactionRate[0]
+      ? Math.round((satisfactionRate[0].averageRating / 5) * 100)
+      : 98, // Convert 0-5 scale to percentage
+    totalHosts,
+    totalUsers,
+  };
+
+  res.status(200).json({
+    success: true,
+    stats,
+  });
+});
