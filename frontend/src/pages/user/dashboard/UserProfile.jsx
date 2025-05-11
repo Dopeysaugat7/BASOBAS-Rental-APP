@@ -33,14 +33,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Camera, Pencil, Check, Lock, Ticket, Trash2, ShieldAlert } from "lucide-react";
 
 export const UserProfile = () => {
-  // Authentication and routing hooks
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State management
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
@@ -48,7 +47,6 @@ export const UserProfile = () => {
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
 
-  // Form handling for profile section
   const {
     register: profileRegister,
     handleSubmit: handleProfileSubmit,
@@ -58,7 +56,6 @@ export const UserProfile = () => {
     formState: { errors: profileErrors, isSubmitting: isProfileSubmitting },
   } = useForm();
 
-  // Form handling for password section
   const {
     register: passwordRegister,
     handleSubmit: handlePasswordSubmit,
@@ -67,7 +64,6 @@ export const UserProfile = () => {
     formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
   } = useForm();
 
-  // Format address object into a string
   const formatAddress = (address) => {
     if (!address || typeof address !== "object") return "Address not available";
     const { street, city, state, country, postalCode } = address;
@@ -75,7 +71,6 @@ export const UserProfile = () => {
     return parts.length > 0 ? parts.join(", ") : "Address not available";
   };
 
-  // Fetch user bookings
   const fetchBookings = async () => {
     try {
       setBookingsLoading(true);
@@ -94,7 +89,6 @@ export const UserProfile = () => {
     }
   };
 
-  // Initialize form and fetch bookings
   useEffect(() => {
     if (user) {
       profileReset({
@@ -110,7 +104,6 @@ export const UserProfile = () => {
     fetchBookings();
   }, [user, profileReset]);
 
-  // Refetch bookings if coming from /booking/success
   useEffect(() => {
     if (location.state?.fromBookingSuccess) {
       fetchBookings();
@@ -150,10 +143,6 @@ export const UserProfile = () => {
     }
   };
 
-  /**
-   * Handles profile picture change event
-   * @param {Event} e - File input change event
-   */
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -162,23 +151,17 @@ export const UserProfile = () => {
       toast.error("Please select an image file (JPEG, PNG, GIF)");
       return;
     }
-    // Validate file size
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
       return;
     }
 
     setProfilePicture(file);
-    // Create preview URL for the image
     const reader = new FileReader();
     reader.onload = () => setProfilePicturePreview(reader.result);
     reader.readAsDataURL(file);
   };
 
-  /**
-   * Updates user profile with form data
-   * @param {Object} data - Form data from profile form
-   */
   const updateProfile = async (data) => {
     try {
       setIsLoading(true);
@@ -198,7 +181,6 @@ export const UserProfile = () => {
         formData.append("profile", profilePicture);
       }
 
-      // Send PUT request to update profile
       const response = await axios.put(
         "http://localhost:5000/api/v1/user/me/update",
         formData,
@@ -210,7 +192,6 @@ export const UserProfile = () => {
         }
       );
 
-      // Update user context and show success message
       setUser(response.data.user);
       setProfilePicturePreview(response.data.user.profilePicture);
       toast.success("Profile updated successfully");
@@ -222,10 +203,6 @@ export const UserProfile = () => {
     }
   };
 
-  /**
-   * Changes user password
-   * @param {Object} data - Form data from password form
-   */
   const changePassword = async (data) => {
     try {
       setIsLoading(true);
@@ -235,7 +212,6 @@ export const UserProfile = () => {
         newPassword: data.newPassword.trim(),
       };
 
-      // Send POST request to change password
       await axios.post(
         "http://localhost:5000/api/v1/user/me/change-password",
         payload,
@@ -248,7 +224,6 @@ export const UserProfile = () => {
       );
 
       toast.success("Password changed successfully");
-      // Reset password form
       passwordReset({
         currentPassword: "",
         newPassword: "",
@@ -261,7 +236,6 @@ export const UserProfile = () => {
         config: error.config,
       });
 
-      // Show appropriate error message
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -272,19 +246,14 @@ export const UserProfile = () => {
     }
   };
 
-  /**
-   * Handles account deletion
-   */
   const handleDeleteAccount = async () => {
     try {
       setIsLoading(true);
-      // Send DELETE request to remove user account
       await axios.delete("http://localhost:5000/api/v1/user/me/delete-user", {
         withCredentials: true,
       });
 
       toast.success("Account deleted successfully");
-      // Logout and redirect to home
       logout();
       navigate("/");
     } catch (error) {
@@ -296,41 +265,41 @@ export const UserProfile = () => {
     }
   };
 
-  // Map booking status to display label and color
   const getBookingStatus = (status) => {
     switch (status) {
       case "confirmed":
-        return { label: "Upcoming", color: "text-green-500 bg-green-100" };
+        return { label: "Upcoming", color: "bg-emerald-100 text-emerald-800" };
       case "cancelled":
-        return { label: "Failed", color: "text-red-500 bg-red-100" };
+        return { label: "Cancelled", color: "bg-red-100 text-red-800" };
       case "pending":
-        return { label: "Pending", color: "text-yellow-500 bg-yellow-100" };
+        return { label: "Pending", color: "bg-amber-100 text-amber-800" };
       default:
-        return { label: status, color: "text-gray-500 bg-gray-100" };
+        return { label: status, color: "bg-gray-100 text-gray-800" };
     }
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-full">
-      {/* Delete Account Confirmation Dialog */}
+    <div className="container mx-auto py-8 max-w-6xl">
       <AlertDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" />
+              Confirm Account Deletion
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
+              This action cannot be undone. All your data will be permanently removed from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
               disabled={isLoading}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 rounded-lg"
             >
               {isLoading ? "Deleting..." : "Delete Account"}
             </AlertDialogAction>
@@ -338,7 +307,6 @@ export const UserProfile = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Main Tabs Navigation */}
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="w-full grid grid-cols-3 bg-gray-100 dark:bg-gray-800">
           <TabsTrigger
@@ -361,56 +329,51 @@ export const UserProfile = () => {
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-6">
-          {/* Profile Tab Content */}
+        <div className="mt-8">
           <TabsContent value="profile" className="space-y-6">
             <form onSubmit={handleProfileSubmit(updateProfile)}>
-              <div className="flex sm:flex-row sm:items-start flex-col gap-6 mb-8 bg-white dark:bg-[#0f172b] p-6 rounded-lg border-1">
-                {/* Profile Picture Section */}
-                <div className="flex sm:flex-col items-center justify-center gap-10 sm:gap-2">
-                  <Avatar className="h-24 w-24 sm:mb-4 mb-2">
-                    <AvatarImage
-                      src={
-                        profilePicturePreview ||
-                        user?.profilePicture ||
-                        "/default-image.svg"
-                      }
-                      alt={user?.name}
-                      className="object-cover"
-                    />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="relative">
-                    <Button variant="outline" size="sm" type="button">
-                      <Label
-                        htmlFor="profilePicture"
-                        className="cursor-pointer"
-                      >
-                        Change Photo
-                      </Label>
-                    </Button>
-                    <Input
-                      id="profilePicture"
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={handleProfilePictureChange}
-                    />
+              <div className="flex flex-col md:flex-row gap-8 mb-8 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative group">
+                    <Avatar className="h-24 w-24 border-radius-50% border-2 border-white shadow-md">
+                      <AvatarImage
+                        src={
+                          profilePicturePreview ||
+                          user?.profilePicture ||
+                          "/default-image.svg"
+                        }
+                        alt={user?.name}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-3xl font-medium rounded-xl">
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <label
+                      htmlFor="profilePicture"
+                      className="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 p-2 rounded-full border shadow-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Camera className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                      <input
+                        id="profilePicture"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfilePictureChange}
+                      />
+                    </label>
                   </div>
                 </div>
 
-                {/* Name and Username Section */}
-                <div className="flex-1 w-full space-y-4">
+                <div className="flex-1 space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name" className="text-sm font-medium">
+                      <Label htmlFor="name" className="text-sm font-medium text-gray-600 dark:text-gray-300">
                         Full Name
                       </Label>
                       <Input
                         id="name"
-                        className="sm:text-sm sm:font-medium mt-1"
+                        className="mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         {...profileRegister("name", {
                           required: "Full name is required",
                         })}
@@ -424,14 +387,14 @@ export const UserProfile = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="username" className="text-sm font-medium">
+                      <Label htmlFor="username" className="text-sm font-medium text-gray-600 dark:text-gray-300">
                         Username
                       </Label>
                       <div className="flex items-center mt-1">
-                        <span className="text-gray-600 mr-1">@</span>
+                        <span className="text-gray-500 mr-2">@</span>
                         <Input
                           id="username"
-                          className="flex-1"
+                          className="flex-1 rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                           {...profileRegister("username")}
                           placeholder="username"
                         />
@@ -441,32 +404,31 @@ export const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Personal Information Card */}
-              <Card className="border rounded-lg mb-6 shadow-none">
+              <Card className="border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm mb-6">
                 <CardHeader>
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-lg font-medium flex items-center gap-2">
+                    <Pencil className="w-5 h-5 text-gray-500" />
                     Personal Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Bio Field */}
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio" className="text-gray-600 dark:text-gray-300">Bio</Label>
                     <Input
                       id="bio"
                       {...profileRegister("bio")}
                       placeholder="Tell us about yourself"
+                      className="rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                     />
                   </div>
 
-                  {/* Date of Birth Field with Calendar Popover */}
                   <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Label htmlFor="dateOfBirth" className="text-gray-600 dark:text-gray-300">Date of Birth</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full justify-start text-left font-normal"
+                          className="w-full justify-start text-left font-normal rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         >
                           {profileWatch("dateOfBirth") ? (
                             format(profileWatch("dateOfBirth"), "PPP")
@@ -475,52 +437,49 @@ export const UserProfile = () => {
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 rounded-xl border border-gray-100 shadow-lg">
                         <Calendar
                           mode="single"
                           selected={profileWatch("dateOfBirth")}
-                          onSelect={(date) =>
-                            setProfileValue("dateOfBirth", date)
-                          }
+                          onSelect={(date) => setProfileValue("dateOfBirth", date)}
                           initialFocus
+                          className="rounded-xl"
                         />
                       </PopoverContent>
                     </Popover>
                   </div>
 
-                  {/* Email Field (disabled) */}
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-gray-600 dark:text-gray-300">Email</Label>
                     <Input
                       id="email"
                       {...profileRegister("email")}
                       placeholder="your@email.com"
                       disabled
-                      className="opacity-70 cursor-not-allowed"
+                      className="rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-80"
                     />
-                    {/* Email verification button */}
                     {!user?.accountVerified && (
                       <Button
                         variant="link"
                         size="sm"
                         onClick={handleVerifyEmail}
                         disabled={isLoading}
-                        className="p-0 h-auto text-sm"
+                        className="p-0 h-auto text-sm text-blue-600 dark:text-blue-400"
                       >
                         Verify your email
                       </Button>
                     )}
                   </div>
 
-                  {/* Phone Number Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-gray-600 dark:text-gray-300">Phone Number</Label>
                     <Input
                       id="phone"
                       {...profileRegister("phone", {
                         required: "Phone is required",
                       })}
                       placeholder="+1234567890"
+                      className="rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                     />
                     {profileErrors.phone && (
                       <p className="text-sm text-red-500">
@@ -529,35 +488,35 @@ export const UserProfile = () => {
                     )}
                   </div>
                 </CardContent>
-                {/* Save Changes Button */}
-                <div className="flex justify-end mr-6">
+                <CardFooter className="flex justify-end px-6 pb-6">
                   <Button
                     type="submit"
                     disabled={isProfileSubmitting || isLoading}
+                    className="rounded-lg px-6"
                   >
-                    {isLoading ? "Saving..." : "Save All Changes"}
+                    {isLoading ? "Saving..." : "Save Changes"}
                   </Button>
-                </div>
+                </CardFooter>
               </Card>
             </form>
           </TabsContent>
 
-          {/* Security Tab Content */}
           <TabsContent value="security" className="space-y-6">
-            {/* Account Verification Card */}
-            <Card className="border rounded-lg shadow-none">
+            <Card className="border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Account Verification</CardTitle>
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <Check className="w-5 h-5 text-gray-500" />
+                  Account Verification
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Email Verification Section */}
-                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                <div className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div>
                     <p className="font-medium">Email Verified</p>
-                    <p className="text-sm text-gray-600">{user?.email}</p>
+                    <p className="text-sm text-gray-500">{user?.email}</p>
                   </div>
                   {user?.accountVerified ? (
-                    <span className="text-green-600 text-sm font-medium">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
                       Verified
                     </span>
                   ) : (
@@ -566,40 +525,43 @@ export const UserProfile = () => {
                       size="sm"
                       onClick={handleVerifyEmail}
                       disabled={isLoading}
+                      className="rounded-lg"
                     >
                       Verify
                     </Button>
                   )}
                 </div>
 
-                {/* Phone Verification Section */}
-                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-[rgba(0,0,0,0.1)] transition-colors">
+                <div className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div>
                     <p className="font-medium">Phone Verified</p>
-                    <p className="text-sm text-gray-600">{user?.phone}</p>
+                    <p className="text-sm text-gray-500">{user?.phone}</p>
                   </div>
-                  <Button variant="outline" size="sm" disabled>
+                  <Button variant="outline" size="sm" disabled className="rounded-lg">
                     Verify
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border rounded-lg shadow-none">
+            <Card className="border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Change Password</CardTitle>
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-gray-500" />
+                  Change Password
+                </CardTitle>
               </CardHeader>
               <form onSubmit={handlePasswordSubmit(changePassword)}>
                 <CardContent className="space-y-4">
-                  {/* Current Password Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Label htmlFor="currentPassword" className="text-gray-600 dark:text-gray-300">Current Password</Label>
                     <Input
                       id="currentPassword"
                       type="password"
                       {...passwordRegister("currentPassword", {
                         required: "Current password is required",
                       })}
+                      className="rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                     />
                     {passwordErrors.currentPassword && (
                       <p className="text-sm text-red-500">
@@ -608,9 +570,8 @@ export const UserProfile = () => {
                     )}
                   </div>
 
-                  {/* New Password Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
+                    <Label htmlFor="newPassword" className="text-gray-600 dark:text-gray-300">New Password</Label>
                     <Input
                       id="newPassword"
                       type="password"
@@ -625,6 +586,7 @@ export const UserProfile = () => {
                           message: "Password cannot exceed 32 characters",
                         },
                       })}
+                      className="rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                     />
                     {passwordErrors.newPassword && (
                       <p className="text-sm text-red-500">
@@ -633,9 +595,8 @@ export const UserProfile = () => {
                     )}
                   </div>
 
-                  {/* Confirm Password Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">
+                    <Label htmlFor="confirmPassword" className="text-gray-600 dark:text-gray-300">
                       Confirm New Password
                     </Label>
                     <Input
@@ -647,6 +608,7 @@ export const UserProfile = () => {
                           value === passwordWatch("newPassword") ||
                           "Passwords don't match",
                       })}
+                      className="rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                     />
                     {passwordErrors.confirmPassword && (
                       <p className="text-sm text-red-500">
@@ -655,10 +617,12 @@ export const UserProfile = () => {
                     )}
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end mt-5">
+                <CardFooter className="flex justify-end px-6 pb-6">
+                  <br /><br /><br />
                   <Button
                     type="submit"
                     disabled={isPasswordSubmitting || isLoading}
+                    className="rounded-lg px-6"
                   >
                     {isLoading ? "Updating..." : "Change Password"}
                   </Button>
@@ -666,24 +630,24 @@ export const UserProfile = () => {
               </form>
             </Card>
 
-            {/* Delete Account Card */}
-            <Card className="border-2 rounded-lg border-destructive shadow-none">
+            <Card className="border-2 border-destructive/20 rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg text-destructive">
+                <CardTitle className="text-lg font-medium flex items-center gap-2 text-destructive">
+                  <Trash2 className="w-5 h-5" />
                   Delete Account
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Once you delete your account, there is no going back. Please
-                  be certain.
+                  Once you delete your account, there is no going back. Please be certain.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end px-6 pb-6">
                 <Button
                   variant="destructive"
                   onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isLoading}
+                  className="rounded-lg px-6"
                 >
                   Delete Account
                 </Button>
@@ -691,97 +655,102 @@ export const UserProfile = () => {
             </Card>
           </TabsContent>
 
-          {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
-            <Card className="border rounded-lg shadow-none">
+            <Card className="border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">My Bookings</CardTitle>
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-gray-500" />
+                  My Bookings
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {bookingsLoading ? (
-                  <p className="text-sm text-gray-600">Loading bookings...</p>
+                  <div className="flex justify-center py-8">
+                    <div className="animate-pulse text-gray-500">Loading bookings...</div>
+                  </div>
                 ) : bookings.length === 0 ? (
-                  <p className="text-sm text-gray-600">No bookings found.</p>
+                  <div className="flex flex-col items-center py-12 text-center">
+                    <Ticket className="w-12 h-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">No bookings yet</h3>
+                    <p className="text-gray-500 mt-2">Your upcoming bookings will appear here</p>
+                    <Button variant="outline" className="mt-4 rounded-lg" onClick={() => navigate("/")}>
+                      Browse properties
+                    </Button>
+                  </div>
                 ) : (
-                  bookings.map((booking) => {
-                    const status = getBookingStatus(booking.status);
-                    const primaryImage =
-                      booking.property.images?.[0].url ||
-                      "/placeholder-property.jpg";
-                    return (
-                      <div
-                        key={booking._id}
-                        className="flex flex-col sm:flex-row items-start bg-white dark:bg-[#0f172b] border rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
-                      >
-                        <img
-                          src={primaryImage}
-                          alt={`${booking.property.title} thumbnail`}
-                          className="w-full sm:w-32 h-24 object-cover rounded-md mb-4 sm:mb-0 sm:mr-4"
-                        />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold text-lg">
-                                {booking.property.title}
-                              </h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {formatAddress(booking.property.address)}
-                              </p>
-                            </div>
-                            {/* <span
-                              className={`${status.color} text-xs font-medium px-2 py-1 rounded-full`}
+                  <div className="grid gap-4">
+                    {bookings.map((booking) => {
+                      const status = getBookingStatus(booking.status);
+                      const primaryImage =
+                        booking.property.images?.[0].url ||
+                        "/placeholder-property.jpg";
+                      return (
+                        <div
+                          key={booking._id}
+                          className="flex flex-col sm:flex-row items-start bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                        >
+                          <div className="relative w-full sm:w-48 h-48 sm:h-auto">
+                            <img
+                              src={primaryImage}
+                              alt={`${booking.property.title} thumbnail`}
+                              className="w-full h-full object-cover"
+                            />
+                            <span
+                              className={`absolute top-3 right-3 ${status.color} text-xs font-medium px-3 py-1 rounded-full`}
                             >
                               {status.label}
-                            </span> */}
+                            </span>
                           </div>
-                          <div className="mt-2 space-y-1">
-                            <p className="text-sm">
-                              Check-in:{" "}
-                              {format(new Date(booking.startDate), "PPP")}
-                            </p>
-                            <p className="text-sm">
-                              Check-out:{" "}
-                              {format(new Date(booking.endDate), "PPP")}
-                            </p>
-                            <p className="text-sm font-medium">
-                              Total Amount: NPR {booking.totalAmount}
-                            </p>
-                          </div>
-                          <div className="flex justify-end mt-3">
-                            <Button
-                              variant="link"
-                              className="text-blue-600 p-0 h-auto hover:underline"
-                              onClick={() =>
-                                navigate(`/${booking.property._id}`)
-                              }
-                            >
-                              View Details
-                            </Button>
+                          <div className="flex-1 p-5">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-bold text-lg">
+                                  {booking.property.title}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {formatAddress(booking.property.address)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Check-in</p>
+                                <p className="text-sm">
+                                  {format(new Date(booking.startDate), "PPP")}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Check-out</p>
+                                <p className="text-sm">
+                                  {format(new Date(booking.endDate), "PPP")}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</p>
+                                <p className="text-sm font-medium">
+                                  NPR {booking.totalAmount}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex justify-end mt-4">
+                              <Button
+                                variant="outline"
+                                className="rounded-lg"
+                                onClick={() =>
+                                  navigate(`/${booking.property._id}`)
+                                }
+                              >
+                                View Details
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* <Card className="border rounded-lg shadow-none">
-              <CardHeader>
-                <CardTitle className="text-lg">My Reviews</CardTitle>
-              </CardHeader>
-              <CardContent>
-                Sample Review Item
-                <div className="border rounded-lg p-4 hover:bg-[rgba(0,0,0,0.1)] transition-colors">
-                  <h3 className="font-bold">John Host</h3>
-                  <p className="text-gray-400">Ocean View Villa</p>
-                  <p className="mt-2 text-gray-50">
-                    "Sarah was a wonderful guest! Very respectful of the
-                    property and great communication throughout their stay."
-                  </p>
-                </div>
-              </CardContent>
-            </Card> */}
           </TabsContent>
         </div>
       </Tabs>
