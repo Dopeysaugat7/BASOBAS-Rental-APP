@@ -76,9 +76,9 @@ export default function Footer() {
               <h3 className="text-lg font-semibold">Contact</h3>
               <div className="space-y-2 text-sm text-card-foreground/70">
                 {[
-                  { icon: Phone, text: "(123) 456-7890" },
+                  { icon: Phone, text: "+977-9869984916" },
                   { icon: Mail, text: "contact@homerental.com" },
-                  { icon: MapPin, text: "123 Rental Street, City, Country" },
+                  { icon: MapPin, text: "Bhagwati bahal-Naxal, Kathmandu, Nepal" },
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-2">
                     <item.icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />

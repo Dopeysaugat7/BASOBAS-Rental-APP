@@ -122,7 +122,7 @@ const AboutUs = () => {
             className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto"
           >
             Connecting tenants with their perfect homes and helping property
-            owners maximize their investments since 2020.
+            owners maximize their investments since 2025.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -152,7 +152,7 @@ const AboutUs = () => {
               Revolutionizing property rentals
             </h2>
             <p className="text-lg text-muted-foreground">
-              Founded in 2020, we set out to create a rental platform that
+              Founded in 2025, we set out to create a rental platform that
               prioritizes transparency, ease of use, and trust between property
               owners and tenants. What started as a small local service has
               grown into a trusted platform serving thousands across the
