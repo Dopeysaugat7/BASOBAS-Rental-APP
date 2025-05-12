@@ -33,7 +33,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Camera, Pencil, Check, Lock, Ticket, Trash2, ShieldAlert } from "lucide-react";
+import {
+  Camera,
+  Pencil,
+  Check,
+  Lock,
+  Ticket,
+  Trash2,
+  ShieldAlert,
+} from "lucide-react";
 
 export const UserProfile = () => {
   const { user, setUser, logout } = useAuth();
@@ -291,7 +299,8 @@ export const UserProfile = () => {
               Confirm Account Deletion
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. All your data will be permanently removed from our servers.
+              This action cannot be undone. All your data will be permanently
+              removed from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -368,7 +377,10 @@ export const UserProfile = () => {
                 <div className="flex-1 space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name" className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      <Label
+                        htmlFor="name"
+                        className="text-sm font-medium text-gray-600 dark:text-gray-300"
+                      >
                         Full Name
                       </Label>
                       <Input
@@ -387,7 +399,10 @@ export const UserProfile = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="username" className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      <Label
+                        htmlFor="username"
+                        className="text-sm font-medium text-gray-600 dark:text-gray-300"
+                      >
                         Username
                       </Label>
                       <div className="flex items-center mt-1">
@@ -413,7 +428,12 @@ export const UserProfile = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-gray-600 dark:text-gray-300">Bio</Label>
+                    <Label
+                      htmlFor="bio"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      Bio
+                    </Label>
                     <Input
                       id="bio"
                       {...profileRegister("bio")}
@@ -423,7 +443,12 @@ export const UserProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth" className="text-gray-600 dark:text-gray-300">Date of Birth</Label>
+                    <Label
+                      htmlFor="dateOfBirth"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      Date of Birth
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -441,7 +466,9 @@ export const UserProfile = () => {
                         <Calendar
                           mode="single"
                           selected={profileWatch("dateOfBirth")}
-                          onSelect={(date) => setProfileValue("dateOfBirth", date)}
+                          onSelect={(date) =>
+                            setProfileValue("dateOfBirth", date)
+                          }
                           initialFocus
                           className="rounded-xl"
                         />
@@ -450,7 +477,12 @@ export const UserProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-600 dark:text-gray-300">Email</Label>
+                    <Label
+                      htmlFor="email"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       {...profileRegister("email")}
@@ -472,7 +504,12 @@ export const UserProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-gray-600 dark:text-gray-300">Phone Number</Label>
+                    <Label
+                      htmlFor="phone"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      Phone Number
+                    </Label>
                     <Input
                       id="phone"
                       {...profileRegister("phone", {
@@ -537,7 +574,12 @@ export const UserProfile = () => {
                     <p className="font-medium">Phone Verified</p>
                     <p className="text-sm text-gray-500">{user?.phone}</p>
                   </div>
-                  <Button variant="outline" size="sm" disabled className="rounded-lg">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="rounded-lg"
+                  >
                     Verify
                   </Button>
                 </div>
@@ -554,7 +596,12 @@ export const UserProfile = () => {
               <form onSubmit={handlePasswordSubmit(changePassword)}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-gray-600 dark:text-gray-300">Current Password</Label>
+                    <Label
+                      htmlFor="currentPassword"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      Current Password
+                    </Label>
                     <Input
                       id="currentPassword"
                       type="password"
@@ -571,7 +618,12 @@ export const UserProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-gray-600 dark:text-gray-300">New Password</Label>
+                    <Label
+                      htmlFor="newPassword"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
+                      New Password
+                    </Label>
                     <Input
                       id="newPassword"
                       type="password"
@@ -596,7 +648,10 @@ export const UserProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-600 dark:text-gray-300">
+                    <Label
+                      htmlFor="confirmPassword"
+                      className="text-gray-600 dark:text-gray-300"
+                    >
                       Confirm New Password
                     </Label>
                     <Input
@@ -618,7 +673,9 @@ export const UserProfile = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end px-6 pb-6">
-                  <br /><br /><br />
+                  <br />
+                  <br />
+                  <br />
                   <Button
                     type="submit"
                     disabled={isPasswordSubmitting || isLoading}
@@ -639,7 +696,8 @@ export const UserProfile = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Once you delete your account, there is no going back. Please be certain.
+                  Once you delete your account, there is no going back. Please
+                  be certain.
                 </p>
               </CardContent>
               <CardFooter className="flex justify-end px-6 pb-6">
@@ -666,14 +724,24 @@ export const UserProfile = () => {
               <CardContent className="space-y-4">
                 {bookingsLoading ? (
                   <div className="flex justify-center py-8">
-                    <div className="animate-pulse text-gray-500">Loading bookings...</div>
+                    <div className="animate-pulse text-gray-500">
+                      Loading bookings...
+                    </div>
                   </div>
                 ) : bookings.length === 0 ? (
                   <div className="flex flex-col items-center py-12 text-center">
                     <Ticket className="w-12 h-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">No bookings yet</h3>
-                    <p className="text-gray-500 mt-2">Your upcoming bookings will appear here</p>
-                    <Button variant="outline" className="mt-4 rounded-lg" onClick={() => navigate("/")}>
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                      No bookings yet
+                    </h3>
+                    <p className="text-gray-500 mt-2">
+                      Your upcoming bookings will appear here
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-4 rounded-lg"
+                      onClick={() => navigate("/")}
+                    >
                       Browse properties
                     </Button>
                   </div>
@@ -714,19 +782,25 @@ export const UserProfile = () => {
                             </div>
                             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Check-in</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  Check-in
+                                </p>
                                 <p className="text-sm">
                                   {format(new Date(booking.startDate), "PPP")}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Check-out</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  Check-out
+                                </p>
                                 <p className="text-sm">
                                   {format(new Date(booking.endDate), "PPP")}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  Total Amount
+                                </p>
                                 <p className="text-sm font-medium">
                                   NPR {booking.totalAmount}
                                 </p>
@@ -735,7 +809,7 @@ export const UserProfile = () => {
                             <div className="flex justify-end mt-4">
                               <Button
                                 variant="outline"
-                                className="rounded-lg"
+                                className="relative rounded-lg bg-primary text-white overflow-hidden transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:text-white"
                                 onClick={() =>
                                   navigate(`/${booking.property._id}`)
                                 }

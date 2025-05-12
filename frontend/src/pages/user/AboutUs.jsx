@@ -226,7 +226,7 @@ const AboutUs = () => {
             <div className="absolute -bottom-6 -right-6 bg-background p-4 rounded-2xl shadow-xl border dark:border-gray-700">
               <div className="flex items-center">
                 <div className="flex -space-x-2">
-                  {teamMembers.slice(0, 4).map((member) => (
+                  {teamMembers.slice(0, 5).map((member) => (
                     <motion.img
                       key={member.name}
                       src={member.image}

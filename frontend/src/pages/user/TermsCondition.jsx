@@ -1,7 +1,7 @@
-import { 
-  ScrollText, 
-  ShieldCheck, 
-  FileText, 
+import {
+  ScrollText,
+  ShieldCheck,
+  FileText,
   AlertCircle,
   Home,
   Wallet,
@@ -12,7 +12,7 @@ import {
   CircleDollarSign,
   RefreshCw,
   Scale,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -32,8 +32,8 @@ const TermsAndConditions = () => {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
               Terms
-            </span>{' '}
-            <span style={{ color: '#007FA3' }}>& Conditions</span>
+            </span>{" "}
+            <span style={{ color: "#007FA3" }}>& Conditions</span>
           </h1>
           <p className="text-muted-foreground max-w-3xl mx-auto">
             Last updated:{" "}
@@ -59,8 +59,9 @@ const TermsAndConditions = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm">
-                Welcome to Basobas! These Terms govern your use of our property rental platform. 
-                By accessing our service, you agree to be bound by these terms.
+                Welcome to Basobas! These Terms govern your use of our property
+                rental platform. By accessing our service, you agree to be bound
+                by these terms.
               </p>
             </CardContent>
           </Card>
@@ -94,7 +95,8 @@ const TermsAndConditions = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm mb-3">
-                Owners are responsible for listing accuracy. Tenants should conduct due diligence.
+                Owners are responsible for listing accuracy. Tenants should
+                conduct due diligence.
               </p>
               <ul className="space-y-2 list-disc pl-5 text-sm text-muted-foreground">
                 <li>No false or misleading information</li>
@@ -126,7 +128,8 @@ const TermsAndConditions = () => {
                   <ul className="space-y-1 text-xs text-muted-foreground">
                     <li>• Security deposit (refundable)</li>
                     <li>• First month's rent</li>
-                    <li>• Service fee (3%)</li>
+                    <li>• Service fee (NPR 120)</li>
+                    <li>• Cleaning fee (NPR 75)</li>
                   </ul>
                 </div>
                 <div className="border rounded-lg p-3 bg-muted/10">
@@ -135,9 +138,7 @@ const TermsAndConditions = () => {
                     <h4 className="font-medium text-sm">For Owners</h4>
                   </div>
                   <ul className="space-y-1 text-xs text-muted-foreground">
-                    <li>• Listing fee (one-time)</li>
-                    <li>• Success fee (8%)</li>
-                    <li>• Premium placement (optional)</li>
+                    <li>• Platform service charges may apply</li>
                   </ul>
                 </div>
               </div>
@@ -174,7 +175,8 @@ const TermsAndConditions = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm">
-                We provide mediation services. Both parties agree to attempt mediation first.
+                We provide mediation services. Both parties agree to attempt
+                mediation first.
               </p>
             </CardContent>
           </Card>
@@ -189,7 +191,8 @@ const TermsAndConditions = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm">
-                We may update these Terms periodically. Continued use constitutes acceptance.
+                We may update these Terms periodically. Continued use
+                constitutes acceptance.
               </p>
             </CardContent>
           </Card>
@@ -204,8 +207,11 @@ const TermsAndConditions = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm">
-                Questions? Email our legal team at{' '}
-                <Link to="mailto:legal@basobas.com" className="text-primary hover:underline">
+                Questions? Email our legal team at{" "}
+                <Link
+                  to="mailto:legal@basobas.com"
+                  className="text-primary hover:underline"
+                >
                   legal@basobas.com
                 </Link>
               </p>
