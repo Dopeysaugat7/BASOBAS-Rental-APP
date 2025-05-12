@@ -23,11 +23,11 @@ import { Link } from "react-router-dom";
 
 // Team member data
 const teamMembers = [
-  { name: "Rohan Shrestha", image: "/Rohan.jpg", role: "CEO & Founder" },
-  { name: "Saugat Sudarsan Bista", image: "/Saugat.jpg", role: "CTO" },
-  { name: "Sajjit Bom Malla", image: "/Sajjit.jpg", role: "Lead Developer" },
-  { name: "Diplov Rawal", image: "/Diplov.jpg", role: "UX Designer" },
-  { name: "Bidit Rana", image: "/Bidit.jpg", role: "Marketing Head" },
+  { name: "Rohan Shrestha", image: "/Rohan.jpg", role: "Developer" },
+  { name: "Saugat Sudarsan Bista", image: "/Saugat.jpg", role: "Developer" },
+  { name: "Sajjit Bom Malla", image: "/Sajjit.jpg", role: "Business Analyst" },
+  { name: "Diplov Rawal", image: "/Diplov.jpg", role: "Project Manager" },
+  { name: "Bidit Rana", image: "/Bidit.jpg", role: "Developer" },
 ];
 
 // Values data
