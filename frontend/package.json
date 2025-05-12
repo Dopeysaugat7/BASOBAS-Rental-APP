@@ -37,6 +37,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.6.2",
+    "i": "^0.3.7",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.483.0",
     "react": "^19.0.0",

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { Eye, EyeClosedIcon } from "lucide-react";
+import { Eye, EyeClosedIcon, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { set, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -54,7 +54,7 @@ const UserSignup = () => {
       });
   };
   return (
-    <div className="flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-background dark:bg-background">
+    <div className="flex items-center justify-center p-4 sm:p-6 lg:p-1 bg-background dark:bg-background">
       <div className="w-full max-w-md mx-auto space-y-6 sm:space-y-8">
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground dark:text-foreground">

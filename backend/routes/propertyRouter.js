@@ -21,6 +21,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllProperties);
+router.get("/platform-stats", getPlatformStats);
 router.get("/near/:zipcode/:distance", getPropertiesNearLocation);
 router.get("/:id", getProperty);
 router.get("/host/:userId", getPropertiesByHost);
@@ -36,7 +37,5 @@ router.put("/:id/primary-image", isAuthenticated, setPrimaryImage);
 router.delete("/:id/images/:imageId", isAuthenticated, deleteImage);
 
 router.get("/:propertyId/visits", isAuthenticated, getPropertyVisits);
-
-router.get("/platform-stats", getPlatformStats);
 
 export default router;

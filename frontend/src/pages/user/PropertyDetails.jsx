@@ -30,6 +30,7 @@ import {
   Star,
   Share2,
   MoveRight,
+  BookOpen,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -87,6 +88,7 @@ const PropertyDetails = () => {
   const navigate = useNavigate();
   const [openCheckout, setOpenCheckout] = useState(false);
   const [openVisitDialog, setOpenVisitDialog] = useState(false);
+  const [openDescriptionDialog, setOpenDescriptionDialog] = useState(false);
   const { startConversation, setIsChatOpen } = useChatContext();
   const [error, setError] = useState(null);
 
@@ -273,7 +275,7 @@ const PropertyDetails = () => {
           </Button>
 
           <div className="flex gap-2">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Share2 className="h-5 w-5" />
@@ -402,9 +404,32 @@ const PropertyDetails = () => {
                   <h2 className="text-2xl font-semibold">
                     About this property
                   </h2>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {property.description}
-                  </p>
+                  <div>
+                    <p className="text-muted-foreground leading-relaxed line-clamp-4">
+                      {property.description}
+                    </p>
+                    <Dialog
+                      open={openDescriptionDialog}
+                      onOpenChange={setOpenDescriptionDialog}
+                    >
+                      <DialogTrigger asChild>
+                        <button className="mt-2 flex items-center gap-1 text-primary hover:text-primary/80 transition-colors">
+                          <BookOpen className="h-4 w-4" />
+                          <span className="font-medium">Show More</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Property Description</DialogTitle>
+                        </DialogHeader>
+                        <ScrollArea className="max-h-[60vh] pr-4">
+                          <p className="text-muted-foreground leading-relaxed">
+                            {property.description}
+                          </p>
+                        </ScrollArea>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
 
                 {/* Amenities */}

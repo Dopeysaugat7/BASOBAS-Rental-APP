@@ -11,6 +11,28 @@ import { Link } from "react-router-dom";
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  const Category = [
+    {
+      name: "House",
+      link: `/properties?type=House`,
+    },
+    {
+      name: "Apartments",
+      link: `/properties?type=Apartment`,
+    },
+    {
+      name: "Penthouse",
+      link: `/properties?type=Penthouse`,
+    },
+    {
+      name: "Villa",
+      link: `/properties?type=Villa`,
+    },
+    {
+      name: "Duplex",
+      link: `/properties?type=Duplex`,
+    },
+  ];
   return (
     <footer className="w-full border-t border-border bg-card text-card-foreground app-footer">
       <div className="w-full py-8 sm:py-4">
@@ -34,20 +56,16 @@ export default function Footer() {
 
             {/* Quick Links */}
             <div className="flex flex-col space-y-4 ">
-              <h3 className="text-lg font-semibold">Quick Links</h3>
+              <h3 className="text-lg font-semibold">Categories</h3>
               <nav className="flex flex-col space-y-2">
-                {[
-                  "Featured Properties",
-                  "How It Works",
-                  "Testimonials",
-                  "About Us",
-                ].map((item) => (
+                {Category.map(({ name, link }) => (
                   <Link
-                    key={item}
-                    to="#"
+                    key={name}
+                    to={link}
                     className="text-sm text-card-foreground/70 transition-colors hover:text-primary inline-block"
+                    onClick={() => (window.location.href = link)}
                   >
-                    {item}
+                    {name}
                   </Link>
                 ))}
               </nav>
@@ -58,9 +76,9 @@ export default function Footer() {
               <h3 className="text-lg font-semibold">Contact</h3>
               <div className="space-y-2 text-sm text-card-foreground/70">
                 {[
-                  { icon: Phone, text: "(123) 456-7890" },
+                  { icon: Phone, text: "+977-9869984916" },
                   { icon: Mail, text: "contact@homerental.com" },
-                  { icon: MapPin, text: "123 Rental Street, City, Country" },
+                  { icon: MapPin, text: "Bhagwati bahal-Naxal, Kathmandu, Nepal" },
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-2">
                     <item.icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -72,20 +90,20 @@ export default function Footer() {
 
             {/* Legal */}
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">Legal</h3>
+              <h3 className="text-lg font-semibold">Company</h3>
               <nav className="flex flex-col space-y-2">
                 {[
-                  "Terms & Conditions",
-                  "Privacy Policy",
-                  "Cookie Policy",
-                  "Licensing",
+                  { name: "About us", path: "/about" },
+                  { name: "Terms & Conditions", path: "/terms" },
+                  { name: "Privacy Policy", path: "/privacy" },
+                  { name: "Cookie Policy", path: "/cookies" },
                 ].map((item) => (
                   <Link
-                    key={item}
-                    to="#"
+                    key={item.name}
+                    to={item.path}
                     className="text-sm text-card-foreground/70 transition-colors hover:text-primary inline-block"
                   >
-                    {item}
+                    {item.name}
                   </Link>
                 ))}
               </nav>
