@@ -128,7 +128,6 @@ export const useChat = (userId) => {
               console.log("Message sent:", response.message);
               if (conversationId === activeConversation) {
                 setMessages((prev) => {
-                  // Avoid duplicates
                   if (prev.some((msg) => msg._id === response.message._id)) {
                     return prev;
                   }
@@ -159,15 +158,36 @@ export const useChat = (userId) => {
 
         socket.on("newMessage", (message) => {
           console.log("Received new message:", message);
+          // Update messages if the conversation is active
           if (message.conversation === activeConversation) {
             setMessages((prev) => {
-              // Avoid duplicates
               if (prev.some((msg) => msg._id === message._id)) {
                 return prev;
               }
               return [...prev, message];
             });
+          } else {
+            // For receiver, fetch messages to ensure UI updates
+            fetchMessages(message.conversation);
           }
+          // Update conversation list with latest message preview
+          setConversations((prev) => {
+            return prev.map((conv) =>
+              conv._id === message.conversation
+                ? {
+                    ...conv,
+                    lastMessage: {
+                      _id: message._id,
+                      content: message.content,
+                      sender: message.sender,
+                      createdAt: message.createdAt,
+                      read: message.sender._id === userId,
+                    },
+                  }
+                : conv
+            );
+          });
+          // Update unread count for non-active conversations
           if (
             message.sender._id !== userId &&
             message.conversation !== activeConversation
@@ -201,7 +221,7 @@ export const useChat = (userId) => {
     return () => {
       disconnectSocket();
     };
-  }, [userId]);
+  }, [userId, activeConversation, fetchMessages]);
 
   // Fetch conversations on mount
   useEffect(() => {
@@ -237,5 +257,6 @@ export const useChat = (userId) => {
     startConversation,
     sendMessage,
     unreadCount,
+    setActiveConversation,
   };
 };

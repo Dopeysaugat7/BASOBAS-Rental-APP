@@ -31,6 +31,7 @@ import {
   Share2,
   MoveRight,
   BookOpen,
+  Info,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -96,7 +97,6 @@ const PropertyDetails = () => {
   property = property?.property;
   const isOwner = user && property && user._id === property.host._id;
 
-  // Booking form
   const bookingForm = useForm({
     defaultValues: {
       startDate: "",
@@ -106,12 +106,22 @@ const PropertyDetails = () => {
 
   const onSubmitBooking = async (data) => {
     try {
+      const initialPayment =
+        property.pricePerMonth +
+        (property.securityDeposit || 0) +
+        120 + // Service fee
+        75; // Cleaning fee
+
       const res = await axios.post(
         "http://localhost:5000/api/bookings/book",
         {
           propertyId: id,
           startDate: data.startDate,
           endDate: data.endDate,
+          amount: initialPayment,
+          paymentType: "initial",
+          monthlyRent: property.pricePerMonth,
+          securityDeposit: property.securityDeposit || 0,
         },
         {
           headers: { "Content-Type": "application/json" },
@@ -121,7 +131,6 @@ const PropertyDetails = () => {
 
       const { paymentUrl, paymentData } = res.data;
 
-      // Create form for eSewa redirect
       const form = document.createElement("form");
       form.method = "POST";
       form.action = paymentUrl;
@@ -145,7 +154,6 @@ const PropertyDetails = () => {
     }
   };
 
-  // Visit form
   const visitForm = useForm({
     defaultValues: {
       name: user?.name || "",
@@ -180,7 +188,6 @@ const PropertyDetails = () => {
     }
   };
 
-  // Start conversation with property owner
   const handleMessageOwner = async () => {
     if (!user) {
       setError("Please log in to message the owner");
@@ -196,17 +203,14 @@ const PropertyDetails = () => {
     }
     try {
       setError(null);
-      console.log("Starting conversation with owner:", property.host._id);
       const conversation = await startConversation(property.host._id, id);
-      console.log("Conversation created:", conversation);
-      setIsChatOpen(true); // Open chat window
+      setIsChatOpen(true);
     } catch (err) {
       console.error("Failed to start conversation:", err);
       setError("Failed to start conversation");
     }
   };
 
-  // Fix for default marker icons
   const DefaultIcon = L.icon({
     iconUrl: "/marker-icon.png",
     iconRetinaUrl: "/marker-icon-2x.png",
@@ -262,7 +266,6 @@ const PropertyDetails = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-8">
-        {/* Header with back button */}
         <div className="flex justify-between items-center">
           <Button variant="outline" asChild>
             <a
@@ -290,9 +293,7 @@ const PropertyDetails = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Title and basic info */}
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <div>
@@ -331,7 +332,6 @@ const PropertyDetails = () => {
                 )}
               </div>
 
-              {/* Property badges */}
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="capitalize">
                   {property.propertyType.toLowerCase()}
@@ -350,7 +350,6 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Image Carousel */}
             <div className="rounded-xl overflow-hidden">
               {property.images?.length > 0 ? (
                 <Carousel className="relative group">
@@ -377,7 +376,6 @@ const PropertyDetails = () => {
               )}
             </div>
 
-            {/* Thumbnail grid */}
             {property.images?.length > 1 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {property.images.slice(0, 4).map((image, index) => (
@@ -395,11 +393,8 @@ const PropertyDetails = () => {
               </div>
             )}
 
-            {/* Property details sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Left column */}
               <div className="space-y-8">
-                {/* Description */}
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold">
                     About this property
@@ -432,7 +427,6 @@ const PropertyDetails = () => {
                   </div>
                 </div>
 
-                {/* Amenities */}
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold">
                     What this place offers
@@ -468,9 +462,7 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
-              {/* Right column */}
               <div className="space-y-8">
-                {/* Property specs */}
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold">Property details</h2>
                   <div className="grid grid-cols-2 gap-4">
@@ -517,7 +509,6 @@ const PropertyDetails = () => {
                   </div>
                 </div>
 
-                {/* House Rules */}
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold">House rules</h2>
                   <div className="grid grid-cols-1 gap-3">
@@ -558,7 +549,6 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Map section */}
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Where you'll be</h2>
               <div className="aspect-video rounded-xl overflow-hidden z-0 relative">
@@ -615,11 +605,9 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Reviews Section */}
             <ReviewsSection propertyId={id} />
           </div>
 
-          {/* Sidebar - Renting card */}
           <div className="space-y-6">
             <Card className="top-6">
               <CardHeader>
@@ -666,13 +654,21 @@ const PropertyDetails = () => {
 
                 <Separator />
 
-                <div className="block space-y-2">
+                <div className="block space-y-3">
+                  <p className="font-medium text-sm">Initial Payment</p>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Rent</span>
+                    <span className="text-muted-foreground">
+                      First Month's Rent
+                    </span>
                     <span>NPR {property.pricePerMonth}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Deposit</span>
+                    <span className="text-muted-foreground">
+                      Security Deposit{" "}
+                      <span className="text-xs text-green-600">
+                        (refundable)
+                      </span>
+                    </span>
                     <span>NPR {property.securityDeposit || "0"}</span>
                   </div>
                   <div className="flex justify-between">
@@ -688,7 +684,7 @@ const PropertyDetails = () => {
                 <Separator />
 
                 <div className="flex justify-between font-semibold">
-                  <span>Total</span>
+                  <span>Due Now</span>
                   <span>
                     NPR{" "}
                     {property.pricePerMonth +
@@ -696,6 +692,26 @@ const PropertyDetails = () => {
                       120 +
                       75}
                   </span>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium flex items-center gap-2 text-sm">
+                    <Info className="h-4 w-4" />
+                    About Your Payments
+                  </h4>
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    <li>
+                      • <strong>Security deposit</strong> will be refunded when
+                      you move out
+                    </li>
+                    <li>
+                      • Subsequent rents of NPR {property.pricePerMonth} due
+                      monthly
+                    </li>
+                    <li>
+                      • First month's rent covers initial occupancy period
+                    </li>
+                  </ul>
                 </div>
               </CardContent>
 
@@ -764,23 +780,20 @@ const PropertyDetails = () => {
 
                           <div className="space-y-4">
                             <h3 className="font-semibold text-lg">
-                              Price details
+                              Payment Details
                             </h3>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground text-sm sm:text-base">
-                                  NPR {property.pricePerMonth} x{" "}
-                                  {property.minimumStayMonths} months
+                                  First month's rent
                                 </span>
                                 <span className="text-sm sm:text-base">
-                                  NPR{" "}
-                                  {property.pricePerMonth *
-                                    property.minimumStayMonths}
+                                  NPR {property.pricePerMonth}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground text-sm sm:text-base">
-                                  Security deposit
+                                  Security deposit (refundable)
                                 </span>
                                 <span className="text-sm sm:text-base">
                                   NPR {property.securityDeposit || "0"}
@@ -788,7 +801,7 @@ const PropertyDetails = () => {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground text-sm sm:text-base">
-                                  Service fee
+                                  Service fee (one-time)
                                 </span>
                                 <span className="text-sm sm:text-base">
                                   NPR 120
@@ -796,22 +809,29 @@ const PropertyDetails = () => {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground text-sm sm:text-base">
-                                  Cleaning fee
+                                  Cleaning fee (one-time)
                                 </span>
                                 <span className="text-sm sm:text-base">
                                   NPR 75
                                 </span>
+                              </div>
+                              <div className="pt-2 border-t">
+                                <div className="flex justify-between items-center text-muted-foreground text-sm">
+                                  <span>Subsequent payments:</span>
+                                  <span>
+                                    NPR {property.pricePerMonth}/month
+                                  </span>
+                                </div>
                               </div>
                             </div>
 
                             <Separator />
 
                             <div className="flex justify-between font-semibold text-base sm:text-lg">
-                              <span>Total</span>
+                              <span>Due Now</span>
                               <span>
                                 NPR{" "}
-                                {property.pricePerMonth *
-                                  property.minimumStayMonths +
+                                {property.pricePerMonth +
                                   (property.securityDeposit || 0) +
                                   120 +
                                   75}
@@ -946,7 +966,6 @@ const PropertyDetails = () => {
               </CardFooter>
             </Card>
 
-            {/* Host info */}
             <Card className="overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl">About the host</CardTitle>

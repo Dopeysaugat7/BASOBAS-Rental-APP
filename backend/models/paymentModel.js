@@ -6,12 +6,13 @@ const paymentSchema = new mongoose.Schema({
     ref: "Booking",
     required: true,
   },
-  month: {
-    type: String, // Format: "YYYY-MM"
-    required: true,
-  },
   amount: {
     type: Number,
+    required: true,
+    min: 0,
+  },
+  month: {
+    type: String, // Format: YYYY-MM
     required: true,
   },
   status: {
@@ -22,10 +23,24 @@ const paymentSchema = new mongoose.Schema({
   paymentId: {
     type: String,
   },
+  paymentType: {
+    type: String,
+    enum: ["initial", "monthly"],
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+paymentSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 export const Payment = mongoose.model("Payment", paymentSchema);
