@@ -18,7 +18,7 @@ const geocoder = NodeGeocoder({
   provider: "openstreetmap",
   httpAdapter: "https",
   osmServer: "https://nominatim.openstreetmap.org",
-  email: process.env.GEOCODER_EMAIL || "your@email.com",
+  email: process.env.GEOCODER_EMAIL || "rohan02shrestha@email.com",
   format: "json",
   timeout: 10000,
 });

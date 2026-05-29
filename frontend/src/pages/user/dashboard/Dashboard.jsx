@@ -349,7 +349,7 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/properties/${property._id}`)}
+                        onClick={() => navigate(`/${property._id}`)}
                       >
                         View
                       </Button>
@@ -364,7 +364,7 @@ const Dashboard = () => {
                     ? "Loading properties..."
                     : "No properties listed yet"}
                 </p>
-                <Button onClick={() => navigate("/properties/new")}>
+                <Button onClick={() => navigate("/dashboard/add-property")}>
                   Add Your First Property
                 </Button>
               </div>
