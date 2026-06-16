@@ -70,4 +70,4 @@ Contributions are welcome! To contribute:
 
 For any inquiries or suggestions, feel free to reach out:
 
-- 📧 Email: Saugatbista456@gmail.com
+- 📧 Email: rohan02shrestha@gmail.com
